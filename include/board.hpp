@@ -31,6 +31,10 @@ class Board
         int getRandomNumber(int max);
         void placeRandomMine();
         void placeAllMines();
+
+        bool isInBounds(int w, int h);
+        void updateCellAdjacency(int w, int h);
+        void updateAllCellAdjacencies();
 };
 
 #endif
