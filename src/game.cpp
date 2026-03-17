@@ -6,16 +6,29 @@
 
 int main(int argc, char** argv)
 {
-    if (argc < 4)
+    if (argc >= 2 && argc < 4)
     {
         std::cout << "Not enough arguments !" << std::endl << "Usage: ./game <width> <height> <mines>" << std::endl;
         return 1;
     }
 
-    int width = std::stoi(argv[1]);
-    int height = std::stoi(argv[2]);
-    int mines = std::stoi(argv[3]);
+    int width;
+    int height;
+    int mines;
 
+    if (argc < 4)
+    {
+        width = 9;
+        height = 9;
+        mines = 10;
+    }
+    else
+    {
+        width = std::stoi(argv[1]);
+        height = std::stoi(argv[2]);
+        mines = std::stoi(argv[3]);
+    }
+    
     if (mines > width * height)
     {
         std::cout << "Board is not big enough to place all the mines !" << std::endl;
@@ -27,7 +40,7 @@ int main(int argc, char** argv)
     board.updateAllCellAdjacencies();
     board.printBoard();
 
-    create_window();
+    create_window(board);
     
     return 0;
 }
