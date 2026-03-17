@@ -29,9 +29,9 @@ Board::Board(int w, int h, int mines)
     grid.resize(totalCells);
 };
 
-Cell& Board::getCell(int x, int y)
+Cell& Board::getCell(int w, int h)
 {
-    return grid[y * width + x];
+    return grid[h * width + w];
 }
 
 void Board::printBoard()

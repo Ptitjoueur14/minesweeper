@@ -24,7 +24,7 @@ class Board
 
         Board(int w, int h, int mines);
         
-        Cell& getCell(int x, int y);
+        Cell& getCell(int w, int h);
 
         void printBoard();
 
