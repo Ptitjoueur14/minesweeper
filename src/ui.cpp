@@ -54,6 +54,8 @@ void create_window(Board &board)
 
     SDL_Delay(20000);
 
+    TTF_CloseFont(font);
+
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
 
@@ -61,7 +63,7 @@ void create_window(Board &board)
     SDL_Quit();
 }
 
-void drawText(SDL_Renderer *renderer, TTF_Font *font, const std::string &text, int x, int y, SDL_Color color)
+void drawText(SDL_Renderer *renderer, TTF_Font *font, const std::string &text, SDL_Rect cellRect, SDL_Color color)
 {
     SDL_Surface *surface = TTF_RenderText_Blended(font, text.c_str(), color);
     if (!surface)
@@ -78,31 +80,42 @@ void drawText(SDL_Renderer *renderer, TTF_Font *font, const std::string &text, i
         return;
     }
 
-    SDL_Rect text_rect;
-    text_rect.x = x;
-    text_rect.y = y;
-    text_rect.w = surface->w;
-    text_rect.h = surface->h;
+    SDL_Rect textRect;
+    textRect.w = surface->w;
+    textRect.h = surface->h;
+    textRect.x = cellRect.x + (cellRect.w - textRect.w) / 2;
+    textRect.y = cellRect.y + (cellRect.h - textRect.h) / 2;
 
-    SDL_RenderCopy(renderer, texture, nullptr, &text_rect);
+    SDL_RenderCopy(renderer, texture, nullptr, &textRect);
     SDL_DestroyTexture(texture);
     SDL_FreeSurface(surface);
 }
 
 void drawAllCells(SDL_Renderer *renderer, Board &board, TTF_Font *font)
 {    
-    SDL_Rect rect;
-    int cell_size = 40;
+    SDL_Rect cellRect;
+    int cellSizeX = 1920 / board.width;
+    int cellSizeY = 1080 / board.height;
+    int minCellSize;
+    if (cellSizeX < cellSizeY)
+    {
+        minCellSize = cellSizeX;
+    }
+    else
+    {
+        minCellSize = cellSizeY;
+    }
+    int cellSize = minCellSize;
     int padding = 2; // space between each cell
-    rect.w = cell_size - padding;
-    rect.h = cell_size - padding;
+    cellRect.w = cellSize - padding;
+    cellRect.h = cellSize - padding;
     
     for (int i = 0; i < board.width; i++)
     {
         for (int j = 0; j < board.height; j++)
         {
-            rect.x = 50 + cell_size * i;
-            rect.y = 50 + cell_size * j;
+            cellRect.x = 50 + cellSize * i;
+            cellRect.y = 50 + cellSize * j;
 
             Cell cell = board.getCell(i, j);
             if (cell.isMine)
@@ -115,7 +128,7 @@ void drawAllCells(SDL_Renderer *renderer, Board &board, TTF_Font *font)
             }
 
             // Draw cell first
-            SDL_RenderFillRect(renderer, &rect); 
+            SDL_RenderFillRect(renderer, &cellRect); 
                 
             // Draw adjacency number if not mine and number > 0
             if (!cell.isMine && cell.adjacentMines > 0)
@@ -138,7 +151,7 @@ void drawAllCells(SDL_Renderer *renderer, Board &board, TTF_Font *font)
                 }
                 
                 std::string text = std::to_string(cell.adjacentMines);
-                drawText(renderer, font, text, rect.x, rect.y, text_color);
+                drawText(renderer, font, text, cellRect, text_color);
             }
         }
     }
