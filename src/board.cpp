@@ -10,6 +10,10 @@
 
 #define COLOR_CELL_MINE "\033[91;41m"
 
+// Beginner: 9x9/10
+// Intermediate: 16x16/40
+// Expert: 30x16/99
+
 Board::Board(int w, int h, int mines)
 {
     width = w;

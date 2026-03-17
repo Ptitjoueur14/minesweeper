@@ -7,5 +7,6 @@
 
 void create_window(Board &board);
 void drawAllCells(SDL_Renderer *renderer, Board &board, TTF_Font *font);
+void drawGameStatistics(SDL_Renderer *renderer, Board &board, TTF_Font *font);
 
 #endif

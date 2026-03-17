@@ -79,8 +79,8 @@ void create_window(Board &board)
         SDL_SetRenderDrawColor(renderer, 100, 100, 100, 255);
         
         drawAllCells(renderer, board, font);
+        drawGameStatistics(renderer, board, font);
         SDL_RenderPresent(renderer);
-        
     }
     
     TTF_CloseFont(font);
@@ -169,11 +169,30 @@ void drawAllCells(SDL_Renderer *renderer, Board &board, TTF_Font *font)
             // Draw adjacency number if not mine and number > 0
             if (!cell.isMine && cell.adjacentMines > 0)
             {
-                std::vector<SDL_Color> textColors = {{0, 0, 255}, {0, 255, 0}, {255, 0, 0}, {200, 0, 200}, {245, 159, 22}, {22, 230, 245}, {150, 150, 150}, {100, 100, 100}};
+                std::vector<SDL_Color> textColors = {{0, 0, 255}, {0, 255, 0}, {255, 0, 0}, {255, 0, 255},
+                                                    {245, 159, 22}, {22, 230, 245}, {200, 200, 200}, {150, 150, 150}};
                 SDL_Color textColor = textColors.at(cell.adjacentMines - 1);                
                 std::string text = std::to_string(cell.adjacentMines);
                 drawText(renderer, font, text, cellRect, textColor);
             }
         }
     }
+}
+
+void drawGameStatistics(SDL_Renderer *renderer, Board &board, TTF_Font *font)
+{
+    SDL_Rect statsRect;
+    statsRect.x = 160;
+    statsRect.y = 10;
+    statsRect.w = 300;
+    statsRect.h = 30;
+
+    SDL_Color statsTextColor = {255, 255, 0};
+    int fontSize = 15;
+    TTF_SetFontSize(font, fontSize);
+
+    char statsBuffer[100];
+    snprintf(statsBuffer, sizeof(statsBuffer), "Board size: %ix%i/%i, Mine density: %.2f%s", board.width, board.height, board.minesCount, (float) board.minesCount / board.totalCells * 100, "%");
+    std::string statsText = statsBuffer;
+    drawText(renderer, font, statsText, statsRect, statsTextColor);
 }
