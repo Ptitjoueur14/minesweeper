@@ -169,25 +169,10 @@ void drawAllCells(SDL_Renderer *renderer, Board &board, TTF_Font *font)
             // Draw adjacency number if not mine and number > 0
             if (!cell.isMine && cell.adjacentMines > 0)
             {
-                SDL_Color text_color;
-                switch (cell.adjacentMines)
-                {
-                    case 1:
-                        text_color = {0, 0, 255};
-                        break;
-                    case 2:
-                        text_color = {0, 255, 0};
-                        break;
-                    case 3:
-                        text_color = {255, 0, 0};
-                        break;
-                    default:
-                        text_color = {200, 50, 0};
-                        break;
-                }
-                
+                std::vector<SDL_Color> textColors = {{0, 0, 255}, {0, 255, 0}, {255, 0, 0}, {200, 0, 200}, {245, 159, 22}, {22, 230, 245}, {150, 150, 150}, {100, 100, 100}};
+                SDL_Color textColor = textColors.at(cell.adjacentMines - 1);                
                 std::string text = std::to_string(cell.adjacentMines);
-                drawText(renderer, font, text, cellRect, text_color);
+                drawText(renderer, font, text, cellRect, textColor);
             }
         }
     }
