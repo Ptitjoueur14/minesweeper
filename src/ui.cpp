@@ -1,5 +1,6 @@
 #include <SDL2/SDL_error.h>
 #include <SDL2/SDL_events.h>
+#include <SDL2/SDL_mouse.h>
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_surface.h>
 #include <SDL2/SDL_video.h>
@@ -63,6 +64,12 @@ void create_window(Board &board)
             if (event.type == SDL_QUIT)
             {
                 isRunning = false;
+            }
+
+            if (event.type == SDL_MOUSEBUTTONDOWN)
+            {
+                std::cout << "click" << std::endl;
+                clickCell(event, board);
             }
         }
         
@@ -195,4 +202,50 @@ void drawGameStatistics(SDL_Renderer *renderer, Board &board, TTF_Font *font)
     snprintf(statsBuffer, sizeof(statsBuffer), "Board size: %ix%i/%i, Mine density: %.2f%s", board.width, board.height, board.minesCount, (float) board.minesCount / board.totalCells * 100, "%");
     std::string statsText = statsBuffer;
     drawText(renderer, font, statsText, statsRect, statsTextColor);
+}
+
+void clickCell(SDL_Event &event, Board &board)
+{
+    if (event.button.button == SDL_BUTTON_LEFT)
+    {
+        int x = event.button.x;
+        int y = event.button.y;
+        if (x < 50 || x > WINDOW_WIDTH - 50 || y < 50 || y > WINDOW_HEIGHT)
+        {
+            return;
+        }
+        
+        int mouseX = x - 50;
+        int mouseY = y - 50;
+        int cellSizeX = (WINDOW_WIDTH - 50 * 2) / board.width;
+        int cellSizeY = (WINDOW_HEIGHT - 50 * 2) / board.height;
+        int minCellSize;
+        if (cellSizeX < cellSizeY)
+        {
+            minCellSize = cellSizeX;
+        }
+        else
+        {
+            minCellSize = cellSizeY;
+        }
+        
+        int cellX = mouseX / minCellSize;
+        int cellY = mouseY / minCellSize;
+        std::cout << "Clicked on cell " << cellX << "; " << cellY << std::endl;
+
+        Cell cell = board.getCell(cellX, cellY);
+        if (cell.isMine)
+        {
+            std::cout << "You clicked on a mine and lost !" << std::endl;
+            return;
+        }
+
+        cell.isRevealed = true;
+        revealCell(cellX, cellY, board);
+    }
+}
+
+void revealCell(int x, int y, Board &board)
+{
+    Cell cell = board.getCell(x, y);
 }
