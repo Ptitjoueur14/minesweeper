@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <string>
+#include "../include/ui.hpp"
 
 int main(int argc, char** argv)
 {
@@ -25,5 +26,8 @@ int main(int argc, char** argv)
     board.placeAllMines();
     board.updateAllCellAdjacencies();
     board.printBoard();
+
+    create_window();
+    
     return 0;
 }
