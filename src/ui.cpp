@@ -1,4 +1,5 @@
 #include <SDL2/SDL_error.h>
+#include <SDL2/SDL_events.h>
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_surface.h>
 #include <SDL2/SDL_video.h>
@@ -8,6 +9,9 @@
 #include <string>
 
 #include "../include/ui.hpp"
+
+#define WINDOW_WIDTH 1850
+#define WINDOW_HEIGHT 1020
 
 void create_window(Board &board)
 {
@@ -22,21 +26,21 @@ void create_window(Board &board)
         std::cerr << "TTF Init Failed: " << TTF_GetError() << std::endl;
         return;
     }
-    
-    SDL_Window* window = SDL_CreateWindow("Minesweeper", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1920, 1080, 0);
+
+    SDL_Rect usableBounds;
+    if (SDL_GetDisplayUsableBounds(0, &usableBounds) < 0)
+    {
+        std::cerr << "SDL_GetDisplayUsableBounds failed: " << SDL_GetError() << std::endl;
+        usableBounds.x = 0;
+        usableBounds.y = 0;
+        usableBounds.w = 1920;
+        usableBounds.h = 1080;
+    }
+
+    int posX = usableBounds.x + usableBounds.w - WINDOW_WIDTH;
+    int posY = usableBounds.y;
+    SDL_Window* window = SDL_CreateWindow("Minesweeper", posX, posY, WINDOW_WIDTH, WINDOW_HEIGHT, 0);
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-    SDL_RenderClear(renderer);
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-
-    int window_offset = 40;
-    SDL_RenderDrawLine(renderer, window_offset, window_offset, 1920 - window_offset, window_offset);
-    SDL_RenderDrawLine(renderer, window_offset, window_offset, window_offset, 1080 - window_offset);
-    SDL_RenderDrawLine(renderer, 1920 - window_offset, window_offset, 1920 - window_offset, 1080 - window_offset);
-    SDL_RenderDrawLine(renderer, window_offset, 1080 - window_offset, 1920 - window_offset, 1080 - window_offset);
-
-    SDL_SetRenderDrawColor(renderer, 100, 100, 100, 255);
 
     TTF_Font *font = TTF_OpenFont("assets/minesweeper-font/mine-sweeper.otf", 24);
     if (!font)
@@ -48,12 +52,37 @@ void create_window(Board &board)
         SDL_Quit();
         return;
     }
+
+    bool isRunning = true;
+    SDL_Event event;
+
+    while (isRunning)
+    {
+        while (SDL_PollEvent(&event))
+        {
+            if (event.type == SDL_QUIT)
+            {
+                isRunning = false;
+            }
+        }
+        
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        SDL_RenderClear(renderer);
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+
+        int window_offset = 40;
+        SDL_RenderDrawLine(renderer, window_offset, window_offset, WINDOW_WIDTH - window_offset, window_offset);
+        SDL_RenderDrawLine(renderer, window_offset, window_offset, window_offset, WINDOW_HEIGHT - window_offset);
+        SDL_RenderDrawLine(renderer, WINDOW_WIDTH - window_offset, window_offset, WINDOW_WIDTH - window_offset, WINDOW_HEIGHT - window_offset);
+        SDL_RenderDrawLine(renderer, window_offset, WINDOW_HEIGHT - window_offset, WINDOW_WIDTH - window_offset, WINDOW_HEIGHT - window_offset);
+
+        SDL_SetRenderDrawColor(renderer, 100, 100, 100, 255);
+        
+        drawAllCells(renderer, board, font);
+        SDL_RenderPresent(renderer);
+        
+    }
     
-    drawAllCells(renderer, board, font);
-    SDL_RenderPresent(renderer);
-
-    SDL_Delay(20000);
-
     TTF_CloseFont(font);
 
     SDL_DestroyRenderer(renderer);
@@ -92,10 +121,13 @@ void drawText(SDL_Renderer *renderer, TTF_Font *font, const std::string &text, S
 }
 
 void drawAllCells(SDL_Renderer *renderer, Board &board, TTF_Font *font)
-{    
+{
+    int window_offset = 50;
+    
     SDL_Rect cellRect;
-    int cellSizeX = 1920 / board.width;
-    int cellSizeY = 1080 / board.height;
+    int cellSizeX = (WINDOW_WIDTH - window_offset * 2) / board.width;
+    int cellSizeY = (WINDOW_HEIGHT - window_offset * 2) / board.height;
+
     int minCellSize;
     if (cellSizeX < cellSizeY)
     {
@@ -105,6 +137,10 @@ void drawAllCells(SDL_Renderer *renderer, Board &board, TTF_Font *font)
     {
         minCellSize = cellSizeY;
     }
+
+    int textSize = minCellSize / 2;
+    TTF_SetFontSize(font, textSize);
+    
     int cellSize = minCellSize;
     int padding = 2; // space between each cell
     cellRect.w = cellSize - padding;

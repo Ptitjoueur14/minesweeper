@@ -9,15 +9,6 @@
 #define COLOR_YELLOW "\033[33m"
 
 #define COLOR_CELL_MINE "\033[91;41m"
-#define COLOR_CELL_0 "\033[30;100m"
-#define COLOR_CELL_1 "\033[94m"
-#define COLOR_CELL_2 "\033[32m"
-#define COLOR_CELL_3 "\033[91m"
-#define COLOR_CELL_4 "\033[95m"
-#define COLOR_CELL_5 "\033[33m"
-#define COLOR_CELL_6 "\033[96m"
-#define COLOR_CELL_7 "\033[37m"
-#define COLOR_CELL_8 "\033[90m"
 
 Board::Board(int w, int h, int mines)
 {
@@ -48,40 +39,8 @@ void Board::printBoard()
             }
             else
             {
-                switch(cell.adjacentMines)
-                {
-                    case 0:
-                        std::cout << COLOR_CELL_0 << "O" << COLOR_RESET << " ";
-                        break;
-                    case 1:
-                        std::cout << COLOR_CELL_1 << cell.adjacentMines << COLOR_RESET << " ";
-                        break;
-                    case 2:
-                        std::cout << COLOR_CELL_2 << cell.adjacentMines << COLOR_RESET << " ";
-                        break;
-                    case 3:
-                        std::cout << COLOR_CELL_3 << cell.adjacentMines << COLOR_RESET << " ";
-                        break;
-                    case 4:
-                        std::cout << COLOR_CELL_4 << cell.adjacentMines << COLOR_RESET << " ";
-                        break;
-                    case 5:
-                        std::cout << COLOR_CELL_5<< cell.adjacentMines << COLOR_RESET << " ";
-                        break;
-                    case 6:
-                        std::cout << COLOR_CELL_6 << cell.adjacentMines << COLOR_RESET << " ";
-                        break;
-                    case 7:
-                        std::cout << COLOR_CELL_7 << cell.adjacentMines << COLOR_RESET << " ";
-                        break;
-                    case 8:
-                        std::cout << COLOR_CELL_8 << cell.adjacentMines << COLOR_RESET << " ";
-                        break;
-                    default:
-                        std::cout << COLOR_CELL_8 << cell.adjacentMines << COLOR_RESET << " ";
-                        break;
-                        
-                }
+                std::vector<std::string> colors = {"30;100", "94", "32", "91", "95", "33", "96", "37", "90"};
+                std::cout << "\033[" << colors.at(cell.adjacentMines) << "m" << cell.adjacentMines << COLOR_RESET << " ";
             }
         }
         std::cout << COLOR_RESET << std::endl;
