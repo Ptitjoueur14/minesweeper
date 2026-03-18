@@ -29,6 +29,9 @@ void drawGameStatistics();
 void clickCell();
 void revealCell(int x, int y);
 
+void flagCell();
+void chordCell(int x, int y);
+
 void checkForGameFinish();
 void finishGame();
 

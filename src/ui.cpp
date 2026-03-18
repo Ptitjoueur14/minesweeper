@@ -77,11 +77,13 @@ void create_window()
     {
         while (SDL_PollEvent(&GameUI::event))
         {
+            // Close window with "X" button
             if (GameUI::event.type == SDL_QUIT)
             {
                 isRunning = false;
             }
 
+            // Open cell with left click or "A"
             if ((GameUI::event.type == SDL_MOUSEBUTTONDOWN && GameUI::event.button.button == SDL_BUTTON_LEFT) ||
                 (GameUI::event.type == SDL_KEYDOWN && GameUI::event.key.keysym.sym == SDLK_a))
             {
@@ -89,7 +91,17 @@ void create_window()
                 redrawBoardUI();
                 SDL_RenderPresent(GameUI::renderer);
             }
+            
+            // Flag cell with right click or "Q"
+            if ((GameUI::event.type == SDL_MOUSEBUTTONDOWN && GameUI::event.button.button == SDL_BUTTON_RIGHT) ||
+                (GameUI::event.type == SDL_KEYDOWN && GameUI::event.key.keysym.sym == SDLK_q))
+            {
+                flagCell();
+                redrawBoardUI();
+                SDL_RenderPresent(GameUI::renderer);
+            }
 
+            // Reset board
             if (GameUI::event.type == SDL_KEYDOWN && GameUI::event.key.keysym.sym == SDLK_SPACE)
             {
                 resetBoard();
@@ -188,7 +200,7 @@ void drawAllCells()
             Cell &cell = GameUI::board->getCell(i, j);
 
             // Hidden cell
-            if (!GameUI::isGameFinished && !cell.isRevealed)
+            if (!GameUI::isGameFinished && !cell.isRevealed && !cell.isFlagged)
             {
                 SDL_Color hiddenColor = {120, 120, 120, 255};
                 drawSquare(i, j, hiddenColor);
@@ -196,10 +208,17 @@ void drawAllCells()
             }
 
             // Revealed mine
-            if (!GameUI::isGameFinished && cell.isMine)
+            if (cell.isMine && cell.isRevealed)
             {
                 SDL_Color mineColor = {255, 0, 0, 255};
                 drawSquare(i, j, mineColor);
+                continue;
+            }
+            
+            if (!GameUI::isGameFinished && cell.isFlagged)
+            {
+                SDL_Color flagColor = {180, 0, 0, 255};
+                drawSquare(i, j, flagColor);
                 continue;
             }
 
@@ -297,10 +316,21 @@ void clickCell()
     std::cout << "Clicked on cell " << cellX << "; " << cellY << std::endl;
 
     Cell &cell = GameUI::board->getCell(cellX, cellY);
+    if (cell.isFlagged)
+    {
+        return;
+    }
+    
     if (cell.isMine)
     {
         std::cout << "You clicked on a mine and lost !" << std::endl;
         cell.isRevealed = true;
+        GameUI::isGameFinished = true;
+        return;
+    }
+    if (cell.isRevealed)
+    {
+        chordCell(cellX, cellY);
         return;
     }
 
@@ -362,6 +392,108 @@ void revealCell(int x, int y)
             }
         }
     }
+}
+
+void flagCell()
+{
+    int x;
+    int y;
+    if (GameUI::event.type == SDL_MOUSEBUTTONDOWN)
+    {
+        x = GameUI::event.button.x;
+        y = GameUI::event.button.y;
+    }
+    else if (GameUI::event.type == SDL_KEYDOWN)
+    {
+        SDL_GetMouseState(&x, &y);
+    }
+
+    if (x < 50 || x > WINDOW_WIDTH - 50 || y < 50 || y > WINDOW_HEIGHT)
+    {
+        return;
+    }
+
+    int mouseX = x - 50;
+    int mouseY = y - 50;
+
+    int cellX = mouseX / GameUI::cellSize;
+    int cellY = mouseY / GameUI::cellSize;
+    std::cout << "Flagged cell " << cellX << "; " << cellY << std::endl;
+
+    Cell &cell = GameUI::board->getCell(cellX, cellY);
+    if (!cell.isRevealed)
+    {
+        cell.isFlagged = !cell.isFlagged; // Flag the cell if it was not flagged or unflag it if there was a flag
+        return;
+    }
+}
+
+void chordCell(int x, int y)
+{
+    Cell &chordCell = GameUI::board->getCell(x, y);
+    if (!chordCell.isRevealed || chordCell.adjacentMines == 0)
+    {
+        return;
+    }
+    
+    int totalFlaggedCellsCont = 0;
+    
+    for (int dx = x - 1; dx <= x + 1; dx++)
+    {
+        for (int dy = y - 1; dy <= y + 1; dy++)
+        {
+            if (GameUI::board->isInBounds(dx, dy))
+            {
+                Cell &cell = GameUI::board->getCell(dx, dy);
+
+                if (dx == x && dy == y)
+                {
+                    continue; // Skip chorded cell
+                }
+
+                if (cell.isFlagged)
+                {
+                    totalFlaggedCellsCont++;
+                }
+            }
+        }
+    }
+
+    if (totalFlaggedCellsCont != chordCell.adjacentMines)
+    {
+        return;
+    }
+    
+
+    // Chord
+    for (int dx = x -1; dx <= x + 1; dx++)
+    {
+        for (int dy = y - 1; dy <= y + 1; dy++)
+        {
+            if(GameUI::board->isInBounds(dx, dy))
+            {
+                Cell &cell = GameUI::board->getCell(dx, dy);
+
+                if (cell.isRevealed || cell.isFlagged || dx == x && dy == y)
+                {
+                    continue;
+                }
+
+                // Misplaced flag -> Explode cell and lose the game
+                if (cell.isMine)
+                {
+                    cell.isRevealed = true;
+                    finishGame();
+                    return;
+                }
+
+                // Reveal all other unflagged and unrevealed cells
+                revealCell(dx, dy);
+            }
+        }
+    }
+
+    checkForGameFinish();
 }
 
 void checkForGameFinish()
