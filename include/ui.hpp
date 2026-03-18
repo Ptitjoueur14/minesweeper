@@ -3,6 +3,7 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_events.h>
+#include <SDL2/SDL_pixels.h>
 #include <SDL2/SDL_ttf.h>
 #include "board.hpp"
 
@@ -14,9 +15,13 @@ class GameUI
         static SDL_Window *window;
         static SDL_Renderer *renderer;
         static Board *board;
+        static int cellSize;
 };
 
 void create_window();
+void drawStaticUI();
+void redrawBoardUI();
+void drawSquare(int cellX, int cellY, SDL_Color color);
 void drawAllCells();
 void drawGameStatistics();
 

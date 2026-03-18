@@ -16,6 +16,7 @@ SDL_Renderer *GameUI::renderer = nullptr;
 TTF_Font *GameUI::font = nullptr;
 SDL_Event GameUI::event;
 Board *GameUI::board = nullptr;
+int GameUI::cellSize = 40;
 
 #define WINDOW_WIDTH 1850
 #define WINDOW_HEIGHT 1020
@@ -59,7 +60,13 @@ void create_window()
         SDL_Quit();
         return;
     }
+    
+    drawStaticUI();    
+    drawAllCells();
+    drawGameStatistics();
 
+    SDL_RenderPresent(GameUI::renderer);
+    
     bool isRunning = true;
 
     while (isRunning)
@@ -73,26 +80,11 @@ void create_window()
 
             if (GameUI::event.type == SDL_MOUSEBUTTONDOWN)
             {
-                std::cout << "click" << std::endl;
                 clickCell();
+                redrawBoardUI();
+                SDL_RenderPresent(GameUI::renderer);
             }
         }
-        
-        SDL_SetRenderDrawColor(GameUI::renderer, 0, 0, 0, 255);
-        SDL_RenderClear(GameUI::renderer);
-        SDL_SetRenderDrawColor(GameUI::renderer, 255, 255, 255, 255);
-
-        int window_offset = 40;
-        SDL_RenderDrawLine(GameUI::renderer, window_offset, window_offset, WINDOW_WIDTH - window_offset, window_offset);
-        SDL_RenderDrawLine(GameUI::renderer, window_offset, window_offset, window_offset, WINDOW_HEIGHT - window_offset);
-        SDL_RenderDrawLine(GameUI::renderer, WINDOW_WIDTH - window_offset, window_offset, WINDOW_WIDTH - window_offset, WINDOW_HEIGHT - window_offset);
-        SDL_RenderDrawLine(GameUI::renderer, window_offset, WINDOW_HEIGHT - window_offset, WINDOW_WIDTH - window_offset, WINDOW_HEIGHT - window_offset);
-
-        SDL_SetRenderDrawColor(GameUI::renderer, 100, 100, 100, 255);
-        
-        drawAllCells();
-        drawGameStatistics();
-        SDL_RenderPresent(GameUI::renderer);
     }
     
     TTF_CloseFont(GameUI::font);
@@ -102,6 +94,37 @@ void create_window()
 
     TTF_Quit();
     SDL_Quit();
+}
+
+// Called at the start of the game to draw borders
+void drawStaticUI()
+{
+    SDL_SetRenderDrawColor(GameUI::renderer, 0, 0, 0, 255);
+    SDL_RenderClear(GameUI::renderer);
+
+    SDL_SetRenderDrawColor(GameUI::renderer, 255, 255, 255, 255);
+
+    int window_offset = 40;
+    SDL_RenderDrawLine(GameUI::renderer, window_offset, window_offset, WINDOW_WIDTH - window_offset, window_offset);
+    SDL_RenderDrawLine(GameUI::renderer, window_offset, window_offset, window_offset, WINDOW_HEIGHT - window_offset);
+    SDL_RenderDrawLine(GameUI::renderer, WINDOW_WIDTH - window_offset, window_offset, WINDOW_WIDTH - window_offset, WINDOW_HEIGHT - window_offset);
+    SDL_RenderDrawLine(GameUI::renderer, window_offset, WINDOW_HEIGHT - window_offset, WINDOW_WIDTH - window_offset, WINDOW_HEIGHT - window_offset);
+}
+
+// Called when board state changes (on click)
+void redrawBoardUI()
+{
+    SDL_Rect board_rect;
+    board_rect.x = 50;
+    board_rect.y = 50;
+    board_rect.w = GameUI::cellSize * GameUI::board->width;
+    board_rect.h = GameUI::cellSize * GameUI::board->height;
+
+    // Clear only board area
+    SDL_SetRenderDrawColor(GameUI::renderer, 0, 0, 0, 255);
+    SDL_RenderFillRect(GameUI::renderer, &board_rect);
+
+    drawAllCells();
 }
 
 void drawText(const std::string &text, SDL_Rect cellRect, SDL_Color color)
@@ -135,56 +158,60 @@ void drawText(const std::string &text, SDL_Rect cellRect, SDL_Color color)
 void drawAllCells()
 {
     int window_offset = 50;
-    
-    SDL_Rect cellRect;
+
     int cellSizeX = (WINDOW_WIDTH - window_offset * 2) / GameUI::board->width;
     int cellSizeY = (WINDOW_HEIGHT - window_offset * 2) / GameUI::board->height;
 
-    int minCellSize;
-    if (cellSizeX < cellSizeY)
-    {
-        minCellSize = cellSizeX;
-    }
-    else
-    {
-        minCellSize = cellSizeY;
-    }
+    int minCellSize = (cellSizeX < cellSizeY) ? cellSizeX : cellSizeY;
+
+    GameUI::cellSize = minCellSize;
 
     int textSize = minCellSize / 2;
     TTF_SetFontSize(GameUI::font, textSize);
-    
-    int cellSize = minCellSize;
-    int padding = 2; // space between each cell
-    cellRect.w = cellSize - padding;
-    cellRect.h = cellSize - padding;
-    
+
     for (int i = 0; i < GameUI::board->width; i++)
     {
         for (int j = 0; j < GameUI::board->height; j++)
         {
-            cellRect.x = 50 + cellSize * i;
-            cellRect.y = 50 + cellSize * j;
+            Cell &cell = GameUI::board->getCell(i, j);
 
-            Cell cell = GameUI::board->getCell(i, j);
+            // Hidden cell
+            if (!cell.isRevealed)
+            {
+                SDL_Color hiddenColor = {120, 120, 120, 255};
+                drawSquare(i, j, hiddenColor);
+                continue;
+            }
+
+            // Revealed mine
             if (cell.isMine)
             {
-                SDL_SetRenderDrawColor(GameUI::renderer, 255, 0, 0, 255); // red
-            }
-            else
-            {  
-                SDL_SetRenderDrawColor(GameUI::renderer, 120, 120, 120, 255); // gray
+                SDL_Color mineColor = {255, 0, 0, 255};
+                drawSquare(i, j, mineColor);
+                continue;
             }
 
-            // Draw cell first
-            SDL_RenderFillRect(GameUI::renderer, &cellRect); 
-                
-            // Draw adjacency number if not mine and number > 0
-            if (!cell.isMine && cell.adjacentMines > 0)
+            // Revealed safe cell
+            SDL_Color revealedColor = {180, 180, 180, 255};
+            drawSquare(i, j, revealedColor);
+
+            if (cell.adjacentMines > 0)
             {
-                std::vector<SDL_Color> textColors = {{0, 0, 255}, {0, 255, 0}, {255, 0, 0}, {255, 0, 255},
-                                                    {245, 159, 22}, {22, 230, 245}, {200, 200, 200}, {150, 150, 150}};
-                SDL_Color textColor = textColors.at(cell.adjacentMines - 1);                
+                std::vector<SDL_Color> textColors = {
+                    {0, 0, 255, 255}, {0, 255, 0, 255}, {255, 0, 0, 255}, {255, 0, 255, 255},
+                    {245, 159, 22, 255}, {22, 230, 245, 255}, {200, 200, 200, 255}, {150, 150, 150, 255}
+                };
+
+                SDL_Color textColor = textColors.at(cell.adjacentMines - 1);
                 std::string text = std::to_string(cell.adjacentMines);
+
+                int padding = 2;
+                SDL_Rect cellRect;
+                cellRect.w = GameUI::cellSize - padding;
+                cellRect.h = GameUI::cellSize - padding;
+                cellRect.x = 50 + GameUI::cellSize * i;
+                cellRect.y = 50 + GameUI::cellSize * j;
+
                 drawText(text, cellRect, textColor);
             }
         }
@@ -222,35 +249,68 @@ void clickCell()
         
         int mouseX = x - 50;
         int mouseY = y - 50;
-        int cellSizeX = (WINDOW_WIDTH - 50 * 2) / GameUI::board->width;
-        int cellSizeY = (WINDOW_HEIGHT - 50 * 2) / GameUI::board->height;
-        int minCellSize;
-        if (cellSizeX < cellSizeY)
-        {
-            minCellSize = cellSizeX;
-        }
-        else
-        {
-            minCellSize = cellSizeY;
-        }
         
-        int cellX = mouseX / minCellSize;
-        int cellY = mouseY / minCellSize;
+        int cellX = mouseX / GameUI::cellSize;
+        int cellY = mouseY / GameUI::cellSize;
         std::cout << "Clicked on cell " << cellX << "; " << cellY << std::endl;
 
-        Cell cell = GameUI::board->getCell(cellX, cellY);
-        if (cell.isMine)
-        {
-            std::cout << "You clicked on a mine and lost !" << std::endl;
-            return;
-        }
+        Cell &cell = GameUI::board->getCell(cellX, cellY);
 
         cell.isRevealed = true;
         revealCell(cellX, cellY, *GameUI::board);
     }
 }
 
+void drawSquare(int cellX, int cellY, SDL_Color color)
+{
+    int padding = 2;
+    
+    SDL_Rect cellRect;
+    cellRect.w = GameUI::cellSize - padding;
+    cellRect.h = GameUI::cellSize - padding;
+    cellRect.x = 50 + GameUI::cellSize * cellX;
+    cellRect.y = 50 + GameUI::cellSize * cellY;
+    
+    SDL_SetRenderDrawColor(GameUI::renderer, color.r, color.g, color.b, color.a);
+    SDL_RenderFillRect(GameUI::renderer, &cellRect); 
+}
+
 void revealCell(int x, int y, Board &board)
 {
-    Cell cell = board.getCell(x, y);
+    Cell &cell = board.getCell(x, y);
+    if (cell.isMine)
+    {
+        std::cout << "Mine" << std::endl;
+        SDL_Color mineColor = {255, 0, 0, 255};
+        drawSquare(x, y, mineColor);
+    }
+    else
+    {
+        if (cell.adjacentMines == 0)
+        {
+            std::cout << "Empty" << std::endl;
+            SDL_Color emptyColor = {180, 180, 180, 255};
+            drawSquare(x, y, emptyColor);
+        }
+        else
+        {
+            std::cout << "Number cell" << std::endl;
+            std::vector<SDL_Color> textColors = {
+                {0, 0, 255, 255}, {0, 255, 0, 255}, {255, 0, 0, 255}, {255, 0, 255, 255},
+                {245, 159, 22, 255}, {22, 230, 245, 255}, {200, 200, 200, 255}, {150, 150, 150, 255}
+            };
+
+            SDL_Color textColor = textColors.at(cell.adjacentMines - 1);
+            std::string text = std::to_string(cell.adjacentMines);
+
+            int padding = 2;
+            SDL_Rect cellRect;
+            cellRect.w = GameUI::cellSize - padding;
+            cellRect.h = GameUI::cellSize - padding;
+            cellRect.x = 50 + GameUI::cellSize * x;
+            cellRect.y = 50 + GameUI::cellSize * y;
+
+            drawText(text, cellRect, textColor);
+        }
+    }
 }
