@@ -30,15 +30,16 @@ void create_window();
 void drawStaticUI();
 void redrawBoardUI();
 void drawSquare(int cellX, int cellY, SDL_Color color);
+void drawNumber(int cellX, int cellY);
 void drawAllCells();
 void drawGameStatistics();
 void drawTextureInCell(int cellX, int cellY, SDL_Texture *texture);
 
 void clickCell();
-void revealCell(int x, int y);
+void revealCell(int cellX, int cellY);
 
 void flagCell();
-void chordCell(int x, int y);
+void chordCell(int cellX, int cellY);
 
 void checkForGameFinish();
 void finishGame();

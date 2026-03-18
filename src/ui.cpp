@@ -235,25 +235,55 @@ void drawAllCells()
         {
             Cell &cell = GameUI::board->getCell(i, j);
 
+            if (GameUI::isGameFinished)
+            {
+                // Exploded/Revealed mine
+                if (cell.isMine && cell.isRevealed)
+                {
+                    SDL_Color mineColor = {255, 0, 0, 255};
+                    drawSquare(i, j, mineColor);
+                    drawTextureInCell(i, j, GameUI::mineTexture);
+                    continue;
+                }
+                
+                // Missplaced flag at game loss
+                if (!GameUI::isGameWon && cell.isFlagged && !cell.isMine)
+                {
+                    SDL_Color misplacedFlagColor = {255, 0, 0, 255};
+                    drawSquare(i, j, misplacedFlagColor);
+                    drawTextureInCell(i, j, GameUI::flagTexture);
+                    continue;
+                }
+                
+                // Unrevealed mine at game win (place flag)
+                if (GameUI::isGameWon && cell.isMine && !cell.isRevealed)
+                {
+                    SDL_Color hiddenColor = {120, 120, 120, 255};
+                    drawSquare(i, j, hiddenColor);
+                    drawTextureInCell(i, j, GameUI::flagTexture);
+                    continue;
+                }
+                
+                // Unplaced mine at game loss (place mine)
+                if (!GameUI::isGameWon && cell.isMine && !cell.isRevealed)
+                {
+                    SDL_Color hiddenColor = {120, 120, 120, 255};
+                    drawSquare(i, j, hiddenColor);
+                    drawTextureInCell(i, j, GameUI::mineTexture);
+                    continue;
+                }
+            }
+            
             // Hidden cell
-            if (!GameUI::isGameFinished && !cell.isRevealed && !cell.isFlagged)
+            if (!cell.isRevealed && !cell.isFlagged)
             {
                 SDL_Color hiddenColor = {120, 120, 120, 255};
                 drawSquare(i, j, hiddenColor);
-                continue;
-            }
-
-            // Revealed mine
-            if (cell.isMine && cell.isRevealed)
-            {
-                SDL_Color mineColor = {255, 0, 0, 255};
-                drawSquare(i, j, mineColor);
-                drawTextureInCell(i, j, GameUI::mineTexture);
                 continue;
             }
 
             // Flag
-            if (!GameUI::isGameFinished && cell.isFlagged)
+            if (cell.isFlagged)
             {
                 SDL_Color hiddenColor = {120, 120, 120, 255};
                 drawSquare(i, j, hiddenColor);
@@ -261,47 +291,36 @@ void drawAllCells()
                 continue;
             }
 
-            // Unplaced mine at game win (place flag)
-            if (GameUI::isGameFinished && GameUI::isGameWon && cell.isMine && !cell.isRevealed)
-            {
-                SDL_Color hiddenColor = {120, 120, 120, 255};
-                drawSquare(i, j, hiddenColor);
-                drawTextureInCell(i, j, GameUI::flagTexture);
-                continue;
-            }
-            
-            // Unplaced mine at game loss (place mine)
-            if (GameUI::isGameFinished && !GameUI::isGameWon && cell.isMine && !cell.isRevealed)
-            {
-                SDL_Color hiddenColor = {120, 120, 120, 255};
-                drawSquare(i, j, hiddenColor);
-                drawTextureInCell(i, j, GameUI::mineTexture);
-                continue;
-            }
-
+            // Reveal normal cell with number
             SDL_Color revealedColor = {180, 180, 180, 255};
             drawSquare(i, j, revealedColor);
-
-            if (cell.adjacentMines > 0)
-            {
-                std::vector<SDL_Color> textColors = {
-                    {0, 0, 255, 255}, {0, 255, 0, 255}, {255, 0, 0, 255}, {255, 0, 255, 255},
-                    {245, 159, 22, 255}, {22, 230, 245, 255}, {200, 200, 200, 255}, {150, 150, 150, 255}
-                };
-
-                SDL_Color textColor = textColors.at(cell.adjacentMines - 1);
-                std::string text = std::to_string(cell.adjacentMines);
-
-                int padding = 2;
-                SDL_Rect cellRect;
-                cellRect.w = GameUI::cellSize - padding;
-                cellRect.h = GameUI::cellSize - padding;
-                cellRect.x = 50 + GameUI::cellSize * i;
-                cellRect.y = 50 + GameUI::cellSize * j;
-
-                drawText(text, cellRect, textColor);
-            }
+            drawNumber(i, j);
         }
+    }
+}
+
+void drawNumber(int cellX, int cellY)
+{
+    Cell &cell = GameUI::board->getCell(cellX, cellY);
+    
+    if (cell.adjacentMines > 0)
+    {
+        std::vector<SDL_Color> textColors = {
+            {0, 0, 255, 255}, {0, 255, 0, 255}, {255, 0, 0, 255}, {255, 0, 255, 255},
+            {245, 159, 22, 255}, {22, 230, 245, 255}, {200, 200, 200, 255}, {150, 150, 150, 255}
+        };
+
+        SDL_Color textColor = textColors.at(cell.adjacentMines - 1);
+        std::string text = std::to_string(cell.adjacentMines);
+
+        int padding = 2;
+        SDL_Rect cellRect;
+        cellRect.w = GameUI::cellSize - padding;
+        cellRect.h = GameUI::cellSize - padding;
+        cellRect.x = 50 + GameUI::cellSize * cellX;
+        cellRect.y = 50 + GameUI::cellSize * cellY;
+
+        drawText(text, cellRect, textColor);
     }
 }
 
@@ -340,6 +359,11 @@ void drawSquare(int cellX, int cellY, SDL_Color color)
 
 void clickCell()
 {
+    if (GameUI::isGameFinished)
+    {
+        return;
+    }
+    
     int x;
     int y;
     if (GameUI::event.type == SDL_MOUSEBUTTONDOWN)
@@ -401,14 +425,14 @@ void clickCell()
     checkForGameFinish();
 }
 
-void revealCell(int x, int y)
+void revealCell(int cellX, int cellY)
 {
-    if (!GameUI::board->isInBounds(x, y))
+    if (!GameUI::board->isInBounds(cellX, cellY))
     {
         return;
     }
     
-    Cell &cell = GameUI::board->getCell(x, y);
+    Cell &cell = GameUI::board->getCell(cellX, cellY);
     if (cell.isRevealed || cell.isMine)
     {
         return;
@@ -417,7 +441,7 @@ void revealCell(int x, int y)
     cell.isRevealed = true;
 
     SDL_Color emptyColor = {180, 180, 180, 255};
-    drawSquare(x, y, emptyColor);
+    drawSquare(cellX, cellY, emptyColor);
 
     if (cell.adjacentMines > 0)
     {
@@ -433,18 +457,18 @@ void revealCell(int x, int y)
         SDL_Rect cellRect;
         cellRect.w = GameUI::cellSize - padding;
         cellRect.h = GameUI::cellSize - padding;
-        cellRect.x = 50 + GameUI::cellSize * x;
-        cellRect.y = 50 + GameUI::cellSize * y;
+        cellRect.x = 50 + GameUI::cellSize * cellX;
+        cellRect.y = 50 + GameUI::cellSize * cellY;
 
         drawText(text, cellRect, textColor);
         return;
     }
 
-    for (int dx = x - 1; dx <= x + 1; dx++)
+    for (int dx = cellX - 1; dx <= cellX + 1; dx++)
     {
-        for (int dy = y -1; dy <= y + 1; dy++)
+        for (int dy = cellY -1; dy <= cellY + 1; dy++)
         {
-            if (dx == x && dy == y)
+            if (dx == cellY && dy == cellY)
             {
                 continue;
             }
@@ -459,6 +483,11 @@ void revealCell(int x, int y)
 
 void flagCell()
 {
+    if (GameUI::isGameFinished)
+    {
+        return;
+    }
+
     int x;
     int y;
     if (GameUI::event.type == SDL_MOUSEBUTTONDOWN)
@@ -497,9 +526,9 @@ void flagCell()
     }
 }
 
-void chordCell(int x, int y)
+void chordCell(int cellX, int cellY)
 {
-    Cell &chordCell = GameUI::board->getCell(x, y);
+    Cell &chordCell = GameUI::board->getCell(cellX, cellY);
     if (!chordCell.isRevealed || chordCell.adjacentMines == 0)
     {
         return;
@@ -507,15 +536,15 @@ void chordCell(int x, int y)
     
     int totalFlaggedCellsCont = 0;
     
-    for (int dx = x - 1; dx <= x + 1; dx++)
+    for (int dx = cellX - 1; dx <= cellX + 1; dx++)
     {
-        for (int dy = y - 1; dy <= y + 1; dy++)
+        for (int dy = cellY - 1; dy <= cellY + 1; dy++)
         {
             if (GameUI::board->isInBounds(dx, dy))
             {
                 Cell &cell = GameUI::board->getCell(dx, dy);
 
-                if (dx == x && dy == y)
+                if (dx == cellX && dy == cellY)
                 {
                     continue; // Skip chorded cell
                 }
@@ -535,15 +564,15 @@ void chordCell(int x, int y)
     
 
     // Chord
-    for (int dx = x -1; dx <= x + 1; dx++)
+    for (int dx = cellX -1; dx <= cellX + 1; dx++)
     {
-        for (int dy = y - 1; dy <= y + 1; dy++)
+        for (int dy = cellY - 1; dy <= cellY + 1; dy++)
         {
             if(GameUI::board->isInBounds(dx, dy))
             {
                 Cell &cell = GameUI::board->getCell(dx, dy);
 
-                if (cell.isRevealed || cell.isFlagged || dx == x && dy == y)
+                if (cell.isRevealed || cell.isFlagged || dx == cellX && dy == cellY)
                 {
                     continue;
                 }
