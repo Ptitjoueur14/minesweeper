@@ -20,7 +20,7 @@ Board::Board(int w, int h, int mines)
     height = h;
     minesCount = mines;
     totalCells = width * height;
-    if (minesCount >= totalCells - 1)
+    if (minesCount > totalCells - 1)
     {
         std::cerr << "Board: Can't initialise board with no empty cells" << std::endl;
         return;
@@ -64,28 +64,33 @@ int Board::getRandomNumber(int max)
     return std::rand() % max;
 }
 
-void Board::placeRandomMine()
+void Board::placeRandomMine(int firstClickX, int firstClickY)
 {
     int newMineIndex = -1;
     int attemptsCount = 0;
-    while (newMineIndex == -1 || grid[newMineIndex].isMine)
+
+    int firstClickIndex = width * firstClickY + firstClickX;
+    while (newMineIndex == -1 || newMineIndex == firstClickIndex  || grid[newMineIndex].isMine)
     {
         newMineIndex = getRandomNumber(totalCells);
         attemptsCount++;
     }
+
     std::cout << newMineIndex << "(" << attemptsCount << ") ";
     grid[newMineIndex].isMine = true;
 }
 
-void Board::placeAllMines()
+void Board::placeAllMines(int firstClickX, int firstClickY)
 {
     std::cout << "Placing all mines..." << std::endl;
     std::srand(std::time(0));
     std::cout << "Placing " << minesCount << " random mines : ";
+    
     for (int i = 0; i < minesCount; i++)
     {
-        placeRandomMine();
+        placeRandomMine(firstClickX, firstClickY);
     }
+    
     std::cout << std::endl;
 }
 

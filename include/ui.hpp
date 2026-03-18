@@ -22,6 +22,8 @@ class GameUI
 
         static SDL_Texture *flagTexture;
         static SDL_Texture *mineTexture;
+
+        static int nbClicks;
 };
 
 void create_window();

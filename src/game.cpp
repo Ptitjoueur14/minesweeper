@@ -37,9 +37,6 @@ int main(int argc, char** argv)
     
     Board board = Board(width, height, mines);
     GameUI::board = &board;
-    board.placeAllMines();
-    board.updateAllCellAdjacencies();
-    board.printBoard();
 
     create_window();
     

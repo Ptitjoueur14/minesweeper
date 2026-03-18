@@ -24,6 +24,7 @@ bool GameUI::isGameFinished = false;
 bool GameUI::isGameWon = false;
 SDL_Texture *GameUI::flagTexture = nullptr;
 SDL_Texture *GameUI::mineTexture = nullptr;
+int GameUI::nbClicks = 0;
 
 const char revealCellKey = 'a';
 
@@ -361,12 +362,26 @@ void clickCell()
     
     int cellX = mouseX / GameUI::cellSize;
     int cellY = mouseY / GameUI::cellSize;
-    std::cout << "Clicked on cell " << cellX << "; " << cellY << std::endl;
 
+    if (!GameUI::board->isInBounds(cellX, cellY))
+    {
+        return;
+    }
+    
     Cell &cell = GameUI::board->getCell(cellX, cellY);
     if (cell.isFlagged)
     {
         return;
+    }
+    
+    std::cout << "Clicked on cell " << cellX << "; " << cellY << std::endl;
+    GameUI::nbClicks++;
+
+    if (GameUI::nbClicks == 1)
+    {
+        GameUI::board->placeAllMines(cellX, cellY);
+        GameUI::board->updateAllCellAdjacencies();
+        GameUI::board->printBoard();
     }
     
     if (cell.isMine)
@@ -466,6 +481,12 @@ void flagCell()
 
     int cellX = mouseX / GameUI::cellSize;
     int cellY = mouseY / GameUI::cellSize;
+
+    if (!GameUI::board->isInBounds(cellX, cellY))
+    {
+        return;
+    }
+    
     std::cout << "Flagged cell " << cellX << "; " << cellY << std::endl;
 
     Cell &cell = GameUI::board->getCell(cellX, cellY);
@@ -591,9 +612,7 @@ void resetBoard()
     int height = GameUI::board->height;
     int minesCount = GameUI::board->minesCount;
     *GameUI::board = Board(width, height, minesCount);
-    GameUI::board->placeAllMines();
-    GameUI::board->updateAllCellAdjacencies();
     GameUI::isGameFinished = false;
     GameUI::isGameWon = false;
-    GameUI::board->printBoard();
+    GameUI::nbClicks = 0;    
 }

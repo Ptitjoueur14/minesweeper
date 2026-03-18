@@ -29,8 +29,8 @@ class Board
         void printBoard();
 
         int getRandomNumber(int max);
-        void placeRandomMine();
-        void placeAllMines();
+        void placeRandomMine(int firstClickX, int firstClickY);
+        void placeAllMines(int firstClickX, int firstClickY);
 
         bool isInBounds(int w, int h);
         void updateCellAdjacency(int w, int h);
