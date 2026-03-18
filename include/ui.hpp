@@ -42,7 +42,7 @@ void flagCell();
 void chordCell(int cellX, int cellY);
 
 void checkForGameFinish();
-void finishGame();
+void finishGame(bool isWon);
 
 void resetBoard();
 

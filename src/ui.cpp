@@ -6,10 +6,11 @@
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_surface.h>
 #include <SDL2/SDL_video.h>
-#include <iostream>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_image.h>
+
+#include <iostream>
 #include <string>
 
 #include "../include/ui.hpp"
@@ -265,7 +266,7 @@ void drawAllCells()
                 }
                 
                 // Unplaced mine at game loss (place mine)
-                if (!GameUI::isGameWon && cell.isMine && !cell.isRevealed)
+                if (!GameUI::isGameWon && cell.isMine && !cell.isRevealed && !cell.isFlagged)
                 {
                     SDL_Color hiddenColor = {120, 120, 120, 255};
                     drawSquare(i, j, hiddenColor);
@@ -398,7 +399,7 @@ void clickCell()
         return;
     }
     
-    std::cout << "Clicked on cell " << cellX << "; " << cellY << std::endl;
+    // std::cout << "Clicked on cell " << cellX << "; " << cellY << std::endl;
     GameUI::nbClicks++;
 
     if (GameUI::nbClicks == 1)
@@ -516,7 +517,7 @@ void flagCell()
         return;
     }
     
-    std::cout << "Flagged cell " << cellX << "; " << cellY << std::endl;
+    // std::cout << "Flagged cell " << cellX << "; " << cellY << std::endl;
 
     Cell &cell = GameUI::board->getCell(cellX, cellY);
     if (!cell.isRevealed)
@@ -581,8 +582,8 @@ void chordCell(int cellX, int cellY)
                 if (cell.isMine)
                 {
                     cell.isRevealed = true;
-                    finishGame();
-                    return;
+                    finishGame(false);
+                    continue;
                 }
 
                 // Reveal all other unflagged and unrevealed cells
@@ -625,14 +626,14 @@ void checkForGameFinish()
         }
     }
     
-    finishGame();
+    finishGame(true);
 }
 
 // Place all unplaced flags for cells that are mines but were not revealed
-void finishGame()
+void finishGame(bool isWon)
 {
     GameUI::isGameFinished = true;
-    GameUI::isGameWon = true;
+    GameUI::isGameWon = isWon;
 }
 
 void resetBoard()
