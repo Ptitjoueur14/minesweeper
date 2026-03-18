@@ -6,10 +6,20 @@
 #include <SDL2/SDL_ttf.h>
 #include "board.hpp"
 
-void create_window(Board &board);
-void drawAllCells(SDL_Renderer *renderer, Board &board, TTF_Font *font);
-void drawGameStatistics(SDL_Renderer *renderer, Board &board, TTF_Font *font);
+class GameUI
+{
+    public:
+        static TTF_Font *font;
+        static SDL_Event event;
+        static SDL_Window *window;
+        static SDL_Renderer *renderer;
+        static Board *board;
+};
 
-void clickCell(SDL_Event &event, Board &board);
+void create_window();
+void drawAllCells();
+void drawGameStatistics();
+
+void clickCell();
 void revealCell(int x, int y, Board &board);
 #endif

@@ -35,12 +35,13 @@ int main(int argc, char** argv)
         return 1;
     }
     
-    Board board(width, height, mines);
+    Board board = Board(width, height, mines);
+    GameUI::board = &board;
     board.placeAllMines();
     board.updateAllCellAdjacencies();
     board.printBoard();
 
-    create_window(board);
+    create_window();
     
     return 0;
 }
