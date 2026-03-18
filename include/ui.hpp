@@ -16,6 +16,7 @@ class GameUI
         static SDL_Renderer *renderer;
         static Board *board;
         static int cellSize;
+        static bool isGameFinished;
 };
 
 void create_window();
@@ -26,5 +27,11 @@ void drawAllCells();
 void drawGameStatistics();
 
 void clickCell();
-void revealCell(int x, int y, Board &board);
+void revealCell(int x, int y);
+
+void checkForGameFinish();
+void finishGame();
+
+void resetBoard();
+
 #endif

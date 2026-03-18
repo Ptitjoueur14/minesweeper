@@ -20,6 +20,12 @@ Board::Board(int w, int h, int mines)
     height = h;
     minesCount = mines;
     totalCells = width * height;
+    if (minesCount >= totalCells - 1)
+    {
+        std::cerr << "Board: Can't initialise board with no empty cells" << std::endl;
+        return;
+    }
+    
     remainingMines = minesCount;
     grid.resize(totalCells);
 };

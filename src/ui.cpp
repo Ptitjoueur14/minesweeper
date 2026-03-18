@@ -1,5 +1,6 @@
 #include <SDL2/SDL_error.h>
 #include <SDL2/SDL_events.h>
+#include <SDL2/SDL_keycode.h>
 #include <SDL2/SDL_mouse.h>
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_surface.h>
@@ -17,6 +18,9 @@ TTF_Font *GameUI::font = nullptr;
 SDL_Event GameUI::event;
 Board *GameUI::board = nullptr;
 int GameUI::cellSize = 40;
+bool GameUI::isGameFinished = false;
+
+const char revealCellKey = 'a';
 
 #define WINDOW_WIDTH 1850
 #define WINDOW_HEIGHT 1020
@@ -78,9 +82,17 @@ void create_window()
                 isRunning = false;
             }
 
-            if (GameUI::event.type == SDL_MOUSEBUTTONDOWN)
+            if ((GameUI::event.type == SDL_MOUSEBUTTONDOWN && GameUI::event.button.button == SDL_BUTTON_LEFT) ||
+                (GameUI::event.type == SDL_KEYDOWN && GameUI::event.key.keysym.sym == SDLK_a))
             {
                 clickCell();
+                redrawBoardUI();
+                SDL_RenderPresent(GameUI::renderer);
+            }
+
+            if (GameUI::event.type == SDL_KEYDOWN && GameUI::event.key.keysym.sym == SDLK_SPACE)
+            {
+                resetBoard();
                 redrawBoardUI();
                 SDL_RenderPresent(GameUI::renderer);
             }
@@ -176,7 +188,7 @@ void drawAllCells()
             Cell &cell = GameUI::board->getCell(i, j);
 
             // Hidden cell
-            if (!cell.isRevealed)
+            if (!GameUI::isGameFinished && !cell.isRevealed)
             {
                 SDL_Color hiddenColor = {120, 120, 120, 255};
                 drawSquare(i, j, hiddenColor);
@@ -184,14 +196,21 @@ void drawAllCells()
             }
 
             // Revealed mine
-            if (cell.isMine)
+            if (!GameUI::isGameFinished && cell.isMine)
             {
                 SDL_Color mineColor = {255, 0, 0, 255};
                 drawSquare(i, j, mineColor);
                 continue;
             }
 
-            // Revealed safe cell
+            // Unplaced mine at the end of the game
+            if (GameUI::isGameFinished && cell.isMine && !cell.isRevealed)
+            {
+                SDL_Color unplacedFlagColor = {180, 0, 0, 255};
+                drawSquare(i, j, unplacedFlagColor);
+                continue;
+            }
+
             SDL_Color revealedColor = {180, 180, 180, 255};
             drawSquare(i, j, revealedColor);
 
@@ -236,31 +255,7 @@ void drawGameStatistics()
     drawText(statsText, statsRect, statsTextColor);
 }
 
-void clickCell()
-{
-    if (GameUI::event.button.button == SDL_BUTTON_LEFT)
-    {
-        int x = GameUI::event.button.x;
-        int y = GameUI::event.button.y;
-        if (x < 50 || x > WINDOW_WIDTH - 50 || y < 50 || y > WINDOW_HEIGHT)
-        {
-            return;
-        }
-        
-        int mouseX = x - 50;
-        int mouseY = y - 50;
-        
-        int cellX = mouseX / GameUI::cellSize;
-        int cellY = mouseY / GameUI::cellSize;
-        std::cout << "Clicked on cell " << cellX << "; " << cellY << std::endl;
-
-        Cell &cell = GameUI::board->getCell(cellX, cellY);
-
-        cell.isRevealed = true;
-        revealCell(cellX, cellY, *GameUI::board);
-    }
-}
-
+// Draws a colored square in the cell (cellX, cellY)
 void drawSquare(int cellX, int cellY, SDL_Color color)
 {
     int padding = 2;
@@ -275,42 +270,143 @@ void drawSquare(int cellX, int cellY, SDL_Color color)
     SDL_RenderFillRect(GameUI::renderer, &cellRect); 
 }
 
-void revealCell(int x, int y, Board &board)
+void clickCell()
 {
-    Cell &cell = board.getCell(x, y);
+    int x;
+    int y;
+    if (GameUI::event.type == SDL_MOUSEBUTTONDOWN)
+    {
+        x = GameUI::event.button.x;
+        y = GameUI::event.button.y;
+    }
+    else if (GameUI::event.type == SDL_KEYDOWN)
+    {
+        SDL_GetMouseState(&x, &y);
+    }
+
+    if (x < 50 || x > WINDOW_WIDTH - 50 || y < 50 || y > WINDOW_HEIGHT)
+    {
+        return;
+    }
+    
+    int mouseX = x - 50;
+    int mouseY = y - 50;
+    
+    int cellX = mouseX / GameUI::cellSize;
+    int cellY = mouseY / GameUI::cellSize;
+    std::cout << "Clicked on cell " << cellX << "; " << cellY << std::endl;
+
+    Cell &cell = GameUI::board->getCell(cellX, cellY);
     if (cell.isMine)
     {
-        std::cout << "Mine" << std::endl;
-        SDL_Color mineColor = {255, 0, 0, 255};
-        drawSquare(x, y, mineColor);
+        std::cout << "You clicked on a mine and lost !" << std::endl;
+        cell.isRevealed = true;
+        return;
     }
-    else
+
+    revealCell(cellX, cellY);
+    checkForGameFinish();
+}
+
+void revealCell(int x, int y)
+{
+    if (!GameUI::board->isInBounds(x, y))
     {
-        if (cell.adjacentMines == 0)
+        return;
+    }
+    
+    Cell &cell = GameUI::board->getCell(x, y);
+    if (cell.isRevealed || cell.isMine)
+    {
+        return;
+    }
+    
+    cell.isRevealed = true;
+
+    SDL_Color emptyColor = {180, 180, 180, 255};
+    drawSquare(x, y, emptyColor);
+
+    if (cell.adjacentMines > 0)
+    {
+        std::vector<SDL_Color> textColors = {
+            {0, 0, 255, 255}, {0, 255, 0, 255}, {255, 0, 0, 255}, {255, 0, 255, 255},
+            {245, 159, 22, 255}, {22, 230, 245, 255}, {200, 200, 200, 255}, {150, 150, 150, 255}
+        };
+
+        SDL_Color textColor = textColors.at(cell.adjacentMines - 1);
+        std::string text = std::to_string(cell.adjacentMines);
+
+        int padding = 2;
+        SDL_Rect cellRect;
+        cellRect.w = GameUI::cellSize - padding;
+        cellRect.h = GameUI::cellSize - padding;
+        cellRect.x = 50 + GameUI::cellSize * x;
+        cellRect.y = 50 + GameUI::cellSize * y;
+
+        drawText(text, cellRect, textColor);
+        return;
+    }
+
+    for (int dx = x - 1; dx <= x + 1; dx++)
+    {
+        for (int dy = y -1; dy <= y + 1; dy++)
         {
-            std::cout << "Empty" << std::endl;
-            SDL_Color emptyColor = {180, 180, 180, 255};
-            drawSquare(x, y, emptyColor);
-        }
-        else
-        {
-            std::cout << "Number cell" << std::endl;
-            std::vector<SDL_Color> textColors = {
-                {0, 0, 255, 255}, {0, 255, 0, 255}, {255, 0, 0, 255}, {255, 0, 255, 255},
-                {245, 159, 22, 255}, {22, 230, 245, 255}, {200, 200, 200, 255}, {150, 150, 150, 255}
-            };
+            if (dx == x && dy == y)
+            {
+                continue;
+            }
 
-            SDL_Color textColor = textColors.at(cell.adjacentMines - 1);
-            std::string text = std::to_string(cell.adjacentMines);
-
-            int padding = 2;
-            SDL_Rect cellRect;
-            cellRect.w = GameUI::cellSize - padding;
-            cellRect.h = GameUI::cellSize - padding;
-            cellRect.x = 50 + GameUI::cellSize * x;
-            cellRect.y = 50 + GameUI::cellSize * y;
-
-            drawText(text, cellRect, textColor);
+            if (GameUI::board->isInBounds(dx, dy))
+            {
+                revealCell(dx, dy);
+            }
         }
     }
+}
+
+void checkForGameFinish()
+{
+    for (int i = 0; i < GameUI::board->width; i++)
+    {
+        for (int j = 0; j < GameUI::board->height; j++)
+        {
+            Cell &cell = GameUI::board->getCell(i, j);
+            if (!cell.isMine && !cell.isRevealed)
+            {
+                return;
+            }
+        }
+    }
+    
+    finishGame();
+}
+
+// Place all unplaced flags for cells that are mines but were not revealed
+void finishGame()
+{
+    for (int i = 0; i < GameUI::board->width; i++)
+    {
+        for (int j = 0; j < GameUI::board->height; j++)
+        {
+            Cell &cell = GameUI::board->getCell(i, j);
+            if (cell.isMine && !cell.isRevealed)
+            {
+                SDL_Color unplacedFlagColor = {230, 0, 0, 255};
+                drawSquare(i, j, unplacedFlagColor);
+            }
+        }
+    }
+    GameUI::isGameFinished = true;
+}
+
+void resetBoard()
+{
+    int width = GameUI::board->width;
+    int height = GameUI::board->height;
+    int minesCount = GameUI::board->minesCount;
+    *GameUI::board = Board(width, height, minesCount);
+    GameUI::board->placeAllMines();
+    GameUI::board->updateAllCellAdjacencies();
+    GameUI::isGameFinished = false;
+    GameUI::board->printBoard();
 }
