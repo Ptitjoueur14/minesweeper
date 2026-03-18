@@ -4,6 +4,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_pixels.h>
+#include <SDL2/SDL_render.h>
 #include <SDL2/SDL_ttf.h>
 #include "board.hpp"
 
@@ -17,6 +18,10 @@ class GameUI
         static Board *board;
         static int cellSize;
         static bool isGameFinished;
+        static bool isGameWon;
+
+        static SDL_Texture *flagTexture;
+        static SDL_Texture *mineTexture;
 };
 
 void create_window();
@@ -25,6 +30,7 @@ void redrawBoardUI();
 void drawSquare(int cellX, int cellY, SDL_Color color);
 void drawAllCells();
 void drawGameStatistics();
+void drawTextureInCell(int cellX, int cellY, SDL_Texture *texture);
 
 void clickCell();
 void revealCell(int x, int y);

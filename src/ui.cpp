@@ -1,5 +1,6 @@
 #include <SDL2/SDL_error.h>
 #include <SDL2/SDL_events.h>
+#include <SDL2/SDL_hidapi.h>
 #include <SDL2/SDL_keycode.h>
 #include <SDL2/SDL_mouse.h>
 #include <SDL2/SDL_render.h>
@@ -8,6 +9,7 @@
 #include <iostream>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_image.h>
 #include <string>
 
 #include "../include/ui.hpp"
@@ -19,6 +21,9 @@ SDL_Event GameUI::event;
 Board *GameUI::board = nullptr;
 int GameUI::cellSize = 40;
 bool GameUI::isGameFinished = false;
+bool GameUI::isGameWon = false;
+SDL_Texture *GameUI::flagTexture = nullptr;
+SDL_Texture *GameUI::mineTexture = nullptr;
 
 const char revealCellKey = 'a';
 
@@ -36,6 +41,12 @@ void create_window()
     if (TTF_Init() < 0)
     {
         std::cerr << "TTF Init Failed: " << TTF_GetError() << std::endl;
+        return;
+    }
+
+    if (IMG_Init(0) < 0)
+    {
+        std::cerr << "IMG Init Failed: " << IMG_GetError() << std::endl;
         return;
     }
 
@@ -60,8 +71,22 @@ void create_window()
         std::cerr << "Failed to load font: " << TTF_GetError() << std::endl;
         SDL_DestroyRenderer(GameUI::renderer);
         SDL_DestroyWindow(GameUI::window);
+        IMG_Quit();
         TTF_Quit();
         SDL_Quit();
+        return;
+    }
+
+    GameUI::flagTexture = IMG_LoadTexture(GameUI::renderer, "assets/flag.png");
+    if (!GameUI::flagTexture)
+    {
+        std::cout << "Failed to load flag texture: " << IMG_GetError << std::endl;
+        return;
+    }
+    GameUI::mineTexture = IMG_LoadTexture(GameUI::renderer, "assets/mine.png");
+    if (!GameUI::mineTexture)
+    {
+        std::cout << "Failed to load mine texture: " << IMG_GetError << std::endl;
         return;
     }
     
@@ -110,12 +135,22 @@ void create_window()
             }
         }
     }
+
+    if (GameUI::flagTexture)
+    {
+        SDL_DestroyTexture(GameUI::flagTexture);
+    }
+    if (GameUI::mineTexture)
+    {
+        SDL_DestroyTexture(GameUI::mineTexture);
+    }
     
     TTF_CloseFont(GameUI::font);
 
     SDL_DestroyRenderer(GameUI::renderer);
     SDL_DestroyWindow(GameUI::window);
 
+    IMG_Quit();
     TTF_Quit();
     SDL_Quit();
 }
@@ -212,21 +247,34 @@ void drawAllCells()
             {
                 SDL_Color mineColor = {255, 0, 0, 255};
                 drawSquare(i, j, mineColor);
-                continue;
-            }
-            
-            if (!GameUI::isGameFinished && cell.isFlagged)
-            {
-                SDL_Color flagColor = {180, 0, 0, 255};
-                drawSquare(i, j, flagColor);
+                drawTextureInCell(i, j, GameUI::mineTexture);
                 continue;
             }
 
-            // Unplaced mine at the end of the game
-            if (GameUI::isGameFinished && cell.isMine && !cell.isRevealed)
+            // Flag
+            if (!GameUI::isGameFinished && cell.isFlagged)
             {
-                SDL_Color unplacedFlagColor = {180, 0, 0, 255};
-                drawSquare(i, j, unplacedFlagColor);
+                SDL_Color hiddenColor = {120, 120, 120, 255};
+                drawSquare(i, j, hiddenColor);
+                drawTextureInCell(i, j, GameUI::flagTexture);
+                continue;
+            }
+
+            // Unplaced mine at game win (place flag)
+            if (GameUI::isGameFinished && GameUI::isGameWon && cell.isMine && !cell.isRevealed)
+            {
+                SDL_Color hiddenColor = {120, 120, 120, 255};
+                drawSquare(i, j, hiddenColor);
+                drawTextureInCell(i, j, GameUI::flagTexture);
+                continue;
+            }
+            
+            // Unplaced mine at game loss (place mine)
+            if (GameUI::isGameFinished && !GameUI::isGameWon && cell.isMine && !cell.isRevealed)
+            {
+                SDL_Color hiddenColor = {120, 120, 120, 255};
+                drawSquare(i, j, hiddenColor);
+                drawTextureInCell(i, j, GameUI::mineTexture);
                 continue;
             }
 
@@ -496,6 +544,23 @@ void chordCell(int x, int y)
     checkForGameFinish();
 }
 
+void drawTextureInCell(int cellX, int cellY, SDL_Texture *texture)
+{
+    if (!texture)
+    {
+        return;    
+    }
+    
+    int padding = 2;
+    SDL_Rect imageRect;
+    imageRect.w = GameUI::cellSize - padding;
+    imageRect.h = GameUI::cellSize - padding;
+    imageRect.x = 50 + GameUI::cellSize * cellX;
+    imageRect.y = 50 + GameUI::cellSize * cellY;
+
+    SDL_RenderCopy(GameUI::renderer, texture, nullptr, &imageRect);
+}
+
 void checkForGameFinish()
 {
     for (int i = 0; i < GameUI::board->width; i++)
@@ -516,19 +581,8 @@ void checkForGameFinish()
 // Place all unplaced flags for cells that are mines but were not revealed
 void finishGame()
 {
-    for (int i = 0; i < GameUI::board->width; i++)
-    {
-        for (int j = 0; j < GameUI::board->height; j++)
-        {
-            Cell &cell = GameUI::board->getCell(i, j);
-            if (cell.isMine && !cell.isRevealed)
-            {
-                SDL_Color unplacedFlagColor = {230, 0, 0, 255};
-                drawSquare(i, j, unplacedFlagColor);
-            }
-        }
-    }
     GameUI::isGameFinished = true;
+    GameUI::isGameWon = true;
 }
 
 void resetBoard()
@@ -540,5 +594,6 @@ void resetBoard()
     GameUI::board->placeAllMines();
     GameUI::board->updateAllCellAdjacencies();
     GameUI::isGameFinished = false;
+    GameUI::isGameWon = false;
     GameUI::board->printBoard();
 }
