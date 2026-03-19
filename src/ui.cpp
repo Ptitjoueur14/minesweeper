@@ -12,8 +12,10 @@
 
 #include <iostream>
 #include <string>
+#include <chrono>
 
 #include "../include/ui.hpp"
+#include "../include/timer.hpp"
 
 SDL_Window *GameUI::window = nullptr;
 SDL_Renderer *GameUI::renderer = nullptr;
@@ -26,6 +28,13 @@ bool GameUI::isGameWon = false;
 SDL_Texture *GameUI::flagTexture = nullptr;
 SDL_Texture *GameUI::mineTexture = nullptr;
 int GameUI::nbClicks = 0;
+int GameUI::leftClicks = 0;
+int GameUI::rightClicks = 0;
+
+std::chrono::steady_clock::time_point GameUI::gameStartTime;
+std::chrono::steady_clock::time_point GameUI::gameEndTime;
+int GameUI::elapsedSeconds = 0;
+double GameUI::finalTimeSeconds = 0.0;
 
 const char revealCellKey = 'a';
 
@@ -46,7 +55,7 @@ void create_window()
         return;
     }
 
-    if (IMG_Init(0) < 0)
+    if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG))
     {
         std::cerr << "IMG Init Failed: " << IMG_GetError() << std::endl;
         return;
@@ -82,13 +91,13 @@ void create_window()
     GameUI::flagTexture = IMG_LoadTexture(GameUI::renderer, "assets/flag.png");
     if (!GameUI::flagTexture)
     {
-        std::cout << "Failed to load flag texture: " << IMG_GetError << std::endl;
+        std::cout << "Failed to load flag texture: " << IMG_GetError() << std::endl;
         return;
     }
     GameUI::mineTexture = IMG_LoadTexture(GameUI::renderer, "assets/mine.png");
     if (!GameUI::mineTexture)
     {
-        std::cout << "Failed to load mine texture: " << IMG_GetError << std::endl;
+        std::cout << "Failed to load mine texture: " << IMG_GetError() << std::endl;
         return;
     }
     
@@ -135,10 +144,23 @@ void create_window()
             if (GameUI::event.type == SDL_KEYDOWN && GameUI::event.key.keysym.sym == SDLK_SPACE)
             {
                 resetBoard();
+                drawStaticUI();
+                drawGameStatistics();
+                drawGameInfo();
                 redrawBoardUI();
                 SDL_RenderPresent(GameUI::renderer);
             }
         }
+
+        
+        if (Timer::updateTimer())
+        {
+            //std::cout << "Elapsed time: " << GameUI::elapsedSeconds << std::endl;
+            drawGameInfo();
+            SDL_RenderPresent(GameUI::renderer);
+        }
+        
+        SDL_Delay(16);
     }
 
     if (GameUI::flagTexture)
@@ -351,7 +373,7 @@ void drawGameInfo()
     SDL_Rect resetRect;
     resetRect.x = 600;
     resetRect.y = 0;
-    resetRect.w = 600;
+    resetRect.w = 1000;
     resetRect.h = 38;
 
     SDL_SetRenderDrawColor(GameUI::renderer, 0, 0, 0, 255);
@@ -374,7 +396,7 @@ void drawGameInfo()
     timerRect.h = 30;
 
     std::string minesText = std::to_string(GameUI::board->remainingMines);
-    std::string timerText = std::to_string(10);
+    std::string timerText = std::to_string(GameUI::elapsedSeconds);
 
     drawText(minesText, minesRect, infoTextColor);
     drawText(timerText, timerRect, infoTextColor);
@@ -414,7 +436,7 @@ void clickCell()
         SDL_GetMouseState(&x, &y);
     }
 
-    if (x < 50 || x > WINDOW_WIDTH - 50 || y < 50 || y > WINDOW_HEIGHT)
+    if (x < 50 || x >= 50 + GameUI::cellSize * GameUI::board->width || y < 50 || y >= 50 + GameUI::cellSize * GameUI::board->height)
     {
         return;
     }
@@ -438,12 +460,14 @@ void clickCell()
     
     // std::cout << "Clicked on cell " << cellX << "; " << cellY << std::endl;
     GameUI::nbClicks++;
+    GameUI::leftClicks++;
 
-    if (GameUI::nbClicks == 1)
+    if (GameUI::leftClicks == 1)
     {
         GameUI::board->placeAllMines(cellX, cellY);
         GameUI::board->updateAllCellAdjacencies();
         GameUI::board->printBoard();
+        GameUI::gameStartTime = std::chrono::steady_clock::now();
     }
     
     if (cell.isMine)
@@ -506,7 +530,7 @@ void revealCell(int cellX, int cellY)
     {
         for (int dy = cellY -1; dy <= cellY + 1; dy++)
         {
-            if (dx == cellY && dy == cellY)
+            if (dx == cellX && dy == cellY)
             {
                 continue;
             }
@@ -538,7 +562,7 @@ void flagCell()
         SDL_GetMouseState(&x, &y);
     }
 
-    if (x < 50 || x > WINDOW_WIDTH - 50 || y < 50 || y > WINDOW_HEIGHT)
+    if (x < 50 || x >= 50 + GameUI::cellSize * GameUI::board->width || y < 50 || y >= 50 + GameUI::cellSize * GameUI::board->height)
     {
         return;
     }
@@ -555,6 +579,13 @@ void flagCell()
     }
     
     // std::cout << "Flagged cell " << cellX << "; " << cellY << std::endl;
+    GameUI::nbClicks++;
+    GameUI::rightClicks++;
+
+    if (GameUI::nbClicks == 1)
+    {
+        GameUI::gameStartTime = std::chrono::steady_clock::now();
+    }
 
     Cell &cell = GameUI::board->getCell(cellX, cellY);
     if (!cell.isRevealed)
@@ -685,6 +716,13 @@ void finishGame(bool isWon)
     {
         GameUI::board->remainingMines = 0;
     }
+
+    GameUI::gameEndTime = std::chrono::steady_clock::now();
+    int durationMs = std::chrono::duration_cast<std::chrono::milliseconds>(GameUI::gameEndTime - GameUI::gameStartTime).count();
+
+    int seconds = durationMs / 1000;
+    int milliseconds = durationMs % 1000;
+    std::cout << "Finished game in " << seconds << "." << milliseconds << "s" << std::endl;
 }
 
 void resetBoard()
@@ -696,5 +734,8 @@ void resetBoard()
     GameUI::isGameFinished = false;
     GameUI::isGameWon = false;
     GameUI::nbClicks = 0;
+    GameUI::leftClicks = 0;
+    GameUI::rightClicks = 0;
+    GameUI::elapsedSeconds = 0;
     drawGameInfo();
 }

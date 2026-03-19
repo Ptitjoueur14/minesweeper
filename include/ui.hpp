@@ -6,6 +6,8 @@
 #include <SDL2/SDL_pixels.h>
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_ttf.h>
+#include <chrono>
+
 #include "board.hpp"
 
 class GameUI
@@ -24,6 +26,13 @@ class GameUI
         static SDL_Texture *mineTexture;
 
         static int nbClicks;
+        static int leftClicks;
+        static int rightClicks;
+
+        static std::chrono::steady_clock::time_point gameStartTime;
+        static std::chrono::steady_clock::time_point gameEndTime;
+        static int elapsedSeconds;
+        static double finalTimeSeconds;
 };
 
 void create_window();
