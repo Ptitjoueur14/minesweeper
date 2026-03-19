@@ -29,8 +29,11 @@ class GameUI
 void create_window();
 void drawStaticUI();
 void redrawBoardUI();
+void drawGameInfo();
+
 void drawSquare(int cellX, int cellY, SDL_Color color);
 void drawNumber(int cellX, int cellY);
+
 void drawAllCells();
 void drawGameStatistics();
 void drawTextureInCell(int cellX, int cellY, SDL_Texture *texture);

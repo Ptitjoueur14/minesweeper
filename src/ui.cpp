@@ -92,7 +92,8 @@ void create_window()
         return;
     }
     
-    drawStaticUI();    
+    drawStaticUI();
+    drawGameInfo();    
     drawAllCells();
     drawGameStatistics();
 
@@ -116,6 +117,7 @@ void create_window()
             {
                 clickCell();
                 redrawBoardUI();
+                drawGameInfo();
                 SDL_RenderPresent(GameUI::renderer);
             }
             
@@ -125,6 +127,7 @@ void create_window()
             {
                 flagCell();
                 redrawBoardUI();
+                drawGameInfo();
                 SDL_RenderPresent(GameUI::renderer);
             }
 
@@ -343,6 +346,40 @@ void drawGameStatistics()
     drawText(statsText, statsRect, statsTextColor);
 }
 
+void drawGameInfo()
+{
+    SDL_Rect resetRect;
+    resetRect.x = 600;
+    resetRect.y = 0;
+    resetRect.w = 600;
+    resetRect.h = 38;
+
+    SDL_SetRenderDrawColor(GameUI::renderer, 0, 0, 0, 255);
+    SDL_RenderFillRect(GameUI::renderer, &resetRect);
+    
+    SDL_Color infoTextColor = {255, 0, 0};
+    int fontSize = 15;
+    TTF_SetFontSize(GameUI::font, fontSize);
+    
+    SDL_Rect minesRect;
+    minesRect.x = 800;
+    minesRect.y = 10;
+    minesRect.w = 100;
+    minesRect.h = 30;
+
+    SDL_Rect timerRect;
+    timerRect.x = 1200;
+    timerRect.y = 10;
+    timerRect.w = 100;
+    timerRect.h = 30;
+
+    std::string minesText = std::to_string(GameUI::board->remainingMines);
+    std::string timerText = std::to_string(10);
+
+    drawText(minesText, minesRect, infoTextColor);
+    drawText(timerText, timerRect, infoTextColor);
+}
+
 // Draws a colored square in the cell (cellX, cellY)
 void drawSquare(int cellX, int cellY, SDL_Color color)
 {
@@ -523,6 +560,15 @@ void flagCell()
     if (!cell.isRevealed)
     {
         cell.isFlagged = !cell.isFlagged; // Flag the cell if it was not flagged or unflag it if there was a flag
+        if (cell.isFlagged)
+        {
+            GameUI::board->remainingMines--;
+        }
+        else
+        {
+            GameUI::board->remainingMines++;
+        }
+        
         return;
     }
 }
@@ -634,6 +680,11 @@ void finishGame(bool isWon)
 {
     GameUI::isGameFinished = true;
     GameUI::isGameWon = isWon;
+
+    if (isWon)
+    {
+        GameUI::board->remainingMines = 0;
+    }
 }
 
 void resetBoard()
@@ -644,5 +695,6 @@ void resetBoard()
     *GameUI::board = Board(width, height, minesCount);
     GameUI::isGameFinished = false;
     GameUI::isGameWon = false;
-    GameUI::nbClicks = 0;    
+    GameUI::nbClicks = 0;
+    drawGameInfo();
 }
