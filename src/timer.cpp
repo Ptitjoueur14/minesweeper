@@ -5,7 +5,8 @@ bool Timer::isTimerActive = false;
 std::chrono::steady_clock::time_point Timer::gameStartTime;
 std::chrono::steady_clock::time_point Timer::gameEndTime;
 int Timer::elapsedSeconds = 0;
-double Timer::finalTimeSeconds = 0.0;
+int Timer::finalTimeSeconds = 0;
+int Timer::finalTimeMilliseconds = 0;
 
 void Timer::startTimer()
 {
@@ -51,16 +52,20 @@ void Timer::endTimer()
 
     gameEndTime = getTimeNow();
     isTimerActive = false;
+    finalTimeSeconds = getElapsedTimeSeconds(gameStartTime, gameEndTime);
+    finalTimeMilliseconds = getElapsedTimeMilliseconds(gameStartTime, gameEndTime);
 }
 
+// Gets the "Seconds" component of the time
 int Timer::getElapsedTimeSeconds(std::chrono::steady_clock::time_point startTime, std::chrono::steady_clock::time_point endTime)
 {
     return std::chrono::duration_cast<std::chrono::seconds>(endTime - startTime).count();
 }
 
+// Gets the "Milliseconds" component of the time
 int Timer::getElapsedTimeMilliseconds(std::chrono::steady_clock::time_point startTime, std::chrono::steady_clock::time_point endTime)
 {
-    return std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+    return std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count() % 1000;
 }
 
 void Timer::resetTimer()

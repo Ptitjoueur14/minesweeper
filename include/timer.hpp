@@ -11,7 +11,10 @@ class Timer
         static std::chrono::steady_clock::time_point gameStartTime;
         static std::chrono::steady_clock::time_point gameEndTime;
         static int elapsedSeconds;
-        static double finalTimeSeconds;
+
+        // Timer in seconds and milliseconds
+        static int finalTimeSeconds;
+        static int finalTimeMilliseconds;
 
         static void startTimer();
         static std::chrono::steady_clock::time_point getTimeNow();

@@ -6,7 +6,7 @@
 #include <SDL2/SDL_pixels.h>
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_ttf.h>
-#include <chrono>
+#include <string>
 
 #include "board.hpp"
 
@@ -40,6 +40,8 @@ void drawNumber(int cellX, int cellY);
 
 void drawAllCells();
 void drawGameStatistics();
+void drawText(const std::string &text, SDL_Rect textRect, SDL_Color color);
+void drawTextInCell(const std::string &text, SDL_Rect cellRect, SDL_Color color);
 void drawTextureInCell(int cellX, int cellY, SDL_Texture *texture);
 
 void clickCell();

@@ -37,6 +37,8 @@ const char flagCellKey = 'q';
 #define WINDOW_WIDTH 1850
 #define WINDOW_HEIGHT 1020
 
+#define GAME_INFO_OFFSET 300
+
 void create_window()
 {
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
@@ -181,16 +183,29 @@ void create_window()
 // Called at the start of the game to draw borders
 void drawStaticUI()
 {
+    // TODO: Draw borders at real board borders but still make sure to respect these borders
+
     SDL_SetRenderDrawColor(GameUI::renderer, 0, 0, 0, 255);
     SDL_RenderClear(GameUI::renderer);
 
     SDL_SetRenderDrawColor(GameUI::renderer, 255, 255, 255, 255);
 
     int window_offset = 40;
-    SDL_RenderDrawLine(GameUI::renderer, window_offset, window_offset, WINDOW_WIDTH - window_offset, window_offset);
+
+    // Draw borders
+    // Top line
+    SDL_RenderDrawLine(GameUI::renderer, window_offset, window_offset, WINDOW_WIDTH - GAME_INFO_OFFSET, window_offset);
+
+    // Left line
     SDL_RenderDrawLine(GameUI::renderer, window_offset, window_offset, window_offset, WINDOW_HEIGHT - window_offset);
-    SDL_RenderDrawLine(GameUI::renderer, WINDOW_WIDTH - window_offset, window_offset, WINDOW_WIDTH - window_offset, WINDOW_HEIGHT - window_offset);
-    SDL_RenderDrawLine(GameUI::renderer, window_offset, WINDOW_HEIGHT - window_offset, WINDOW_WIDTH - window_offset, WINDOW_HEIGHT - window_offset);
+
+    // Right line
+    SDL_RenderDrawLine(GameUI::renderer, WINDOW_WIDTH - GAME_INFO_OFFSET, window_offset, WINDOW_WIDTH - GAME_INFO_OFFSET,
+                       WINDOW_HEIGHT - window_offset);
+
+    // Bottom line
+    SDL_RenderDrawLine(GameUI::renderer, window_offset, WINDOW_HEIGHT - window_offset, WINDOW_WIDTH - GAME_INFO_OFFSET,
+                       WINDOW_HEIGHT - window_offset);
 }
 
 // Called when board state changes (on click)
@@ -209,7 +224,7 @@ void redrawBoardUI()
     drawAllCells();
 }
 
-void drawText(const std::string &text, SDL_Rect cellRect, SDL_Color color)
+void drawTextInCell(const std::string &text, SDL_Rect cellRect, SDL_Color color)
 {
     SDL_Surface *surface = TTF_RenderText_Blended(GameUI::font, text.c_str(), color);
     if (!surface)
@@ -237,11 +252,39 @@ void drawText(const std::string &text, SDL_Rect cellRect, SDL_Color color)
     SDL_FreeSurface(surface);
 }
 
+void drawText(const std::string &text, SDL_Rect textRect, SDL_Color color)
+{
+    SDL_Surface *surface = TTF_RenderText_Blended(GameUI::font, text.c_str(), color);
+    if (!surface)
+    {
+        std::cerr << "TTF_RenderText_Blended failed: " << TTF_GetError() << std::endl;
+        return;
+    }
+
+    SDL_Texture *texture = SDL_CreateTextureFromSurface(GameUI::renderer, surface);
+    if (!texture)
+    {
+        std::cerr << "SDL_CreateTextureFromSurface failed: " << SDL_GetError() << std::endl;
+        SDL_FreeSurface(surface);
+        return;
+    }
+    
+    SDL_Rect finalTextRect;
+    finalTextRect.w = surface->w;
+    finalTextRect.h = surface->h;
+    finalTextRect.x = textRect.x;
+    finalTextRect.y = textRect.y;
+
+    SDL_RenderCopy(GameUI::renderer, texture, nullptr, &finalTextRect);
+    SDL_DestroyTexture(texture);
+    SDL_FreeSurface(surface);
+}
+
 void drawAllCells()
 {
     int window_offset = 50;
 
-    int cellSizeX = (WINDOW_WIDTH - window_offset * 2) / GameUI::board->width;
+    int cellSizeX = (WINDOW_WIDTH - window_offset - GAME_INFO_OFFSET) / GameUI::board->width;
     int cellSizeY = (WINDOW_HEIGHT - window_offset * 2) / GameUI::board->height;
 
     int minCellSize = (cellSizeX < cellSizeY) ? cellSizeX : cellSizeY;
@@ -342,14 +385,14 @@ void drawNumber(int cellX, int cellY)
         cellRect.x = 50 + GameUI::cellSize * cellX;
         cellRect.y = 50 + GameUI::cellSize * cellY;
 
-        drawText(text, cellRect, textColor);
+        drawTextInCell(text, cellRect, textColor);
     }
 }
 
 void drawGameStatistics()
 {
     SDL_Rect statsRect;
-    statsRect.x = 160;
+    statsRect.x = 10;
     statsRect.y = 10;
     statsRect.w = 300;
     statsRect.h = 30;
@@ -398,6 +441,64 @@ void drawGameInfo()
     drawText(timerText, timerRect, infoTextColor);
 }
 
+void drawGameFinishInfo()
+{
+    int timeSeconds = Timer::finalTimeSeconds;
+    int timeMilliseconds = Timer::finalTimeMilliseconds;
+
+    char timeBuffer[100];
+    snprintf(timeBuffer, sizeof(timeBuffer), "Time: %i.%i s", timeSeconds, timeMilliseconds);
+    std::string timeText = timeBuffer;
+
+    char clicksBuffer[100];
+    snprintf(clicksBuffer, sizeof(clicksBuffer), "Clicks: %i",
+             GameUI::nbClicks);
+    std::string clicksText = clicksBuffer;
+    
+    char leftClicksBuffer[100];
+    snprintf(clicksBuffer, sizeof(clicksBuffer), "Left clicks: %i",
+             GameUI::leftClicks);
+    std::string leftClicksText = clicksBuffer;
+    
+    char rightClicksBuffer[100];
+    snprintf(clicksBuffer, sizeof(clicksBuffer), "Right clicks: %i",
+             GameUI::rightClicks);
+    std::string rightClicksText = clicksBuffer;
+
+    SDL_Rect timerRect;
+    timerRect.x = (WINDOW_WIDTH - GAME_INFO_OFFSET) + 30;
+    timerRect.y = GAME_INFO_OFFSET;
+    timerRect.w = 150;
+    timerRect.h = 50;
+    
+    SDL_Rect clicksRect;
+    clicksRect.x = (WINDOW_WIDTH - GAME_INFO_OFFSET) + 30;
+    clicksRect.y = GAME_INFO_OFFSET + 200;
+    clicksRect.w = 300;
+    clicksRect.h = 50;
+    
+    SDL_Rect leftClicksRect;
+    leftClicksRect.x = (WINDOW_WIDTH - GAME_INFO_OFFSET) + 30;
+    leftClicksRect.y = GAME_INFO_OFFSET + 230;
+    leftClicksRect.w = 300;
+    leftClicksRect.h = 50;
+    
+    SDL_Rect rightClicksRect;
+    rightClicksRect.x = (WINDOW_WIDTH - GAME_INFO_OFFSET) + 30;
+    rightClicksRect.y = GAME_INFO_OFFSET + 260;
+    rightClicksRect.w = 300;
+    rightClicksRect.h = 50;
+
+    std::cout << "Clicks : " << GameUI::nbClicks << " (Left clicks: " <<
+        GameUI::leftClicks << ", Right clicks: " << GameUI::rightClicks << std::endl;
+
+    SDL_Color gameFinishTextColor = {255, 255, 255};
+    drawText(timeText, timerRect, gameFinishTextColor);
+    drawText(clicksText, clicksRect, gameFinishTextColor);
+    drawText(leftClicksText, leftClicksRect, gameFinishTextColor);
+    drawText(rightClicksText, rightClicksRect, gameFinishTextColor);
+}
+
 // Draws a colored square in the cell (cellX, cellY)
 void drawSquare(int cellX, int cellY, SDL_Color color)
 {
@@ -432,7 +533,8 @@ void clickCell()
         SDL_GetMouseState(&x, &y);
     }
 
-    if (x < 50 || x >= 50 + GameUI::cellSize * GameUI::board->width || y < 50 || y >= 50 + GameUI::cellSize * GameUI::board->height)
+    if (x < 50 || x >= 50 + GameUI::cellSize * GameUI::board->width
+        || y < 50 || y >= 50 + GameUI::cellSize * GameUI::board->height)
     {
         return;
     }
@@ -714,11 +816,9 @@ void finishGame(bool isWon)
     }
 
     Timer::endTimer();
-    int durationMs = Timer::getElapsedTimeMilliseconds(Timer::gameStartTime, Timer::gameEndTime);
+    std::cout << "Finished game in " << Timer::finalTimeSeconds << "." << Timer::finalTimeMilliseconds << "s" << std::endl;
 
-    int seconds = durationMs / 1000;
-    int milliseconds = durationMs % 1000;
-    std::cout << "Finished game in " << seconds << "." << milliseconds << "s" << std::endl;
+    drawGameFinishInfo();
 }
 
 void resetBoard()
