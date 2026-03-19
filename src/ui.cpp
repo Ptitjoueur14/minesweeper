@@ -465,7 +465,7 @@ void drawGameFinishInfo()
     std::string rightClicksText = clicksBuffer;
     
     snprintf(clicksBuffer, sizeof(clicksBuffer), "Chord clicks: %i",
-             GameUI::rightClicks);
+             GameUI::chordClicks);
     std::string chordClicksText = clicksBuffer;
 
     SDL_Rect timerRect;
@@ -847,6 +847,7 @@ void resetBoard()
     GameUI::nbClicks = 0;
     GameUI::leftClicks = 0;
     GameUI::rightClicks = 0;
+    GameUI::chordClicks = 0;
     Timer::resetTimer();
     drawGameInfo();
 }
