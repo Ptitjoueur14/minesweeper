@@ -31,12 +31,8 @@ int GameUI::nbClicks = 0;
 int GameUI::leftClicks = 0;
 int GameUI::rightClicks = 0;
 
-std::chrono::steady_clock::time_point GameUI::gameStartTime;
-std::chrono::steady_clock::time_point GameUI::gameEndTime;
-int GameUI::elapsedSeconds = 0;
-double GameUI::finalTimeSeconds = 0.0;
-
-const char revealCellKey = 'a';
+const char clickCellKey = 'a';
+const char flagCellKey = 'q';
 
 #define WINDOW_WIDTH 1850
 #define WINDOW_HEIGHT 1020
@@ -396,7 +392,7 @@ void drawGameInfo()
     timerRect.h = 30;
 
     std::string minesText = std::to_string(GameUI::board->remainingMines);
-    std::string timerText = std::to_string(GameUI::elapsedSeconds);
+    std::string timerText = std::to_string(Timer::elapsedSeconds);
 
     drawText(minesText, minesRect, infoTextColor);
     drawText(timerText, timerRect, infoTextColor);
@@ -467,7 +463,7 @@ void clickCell()
         GameUI::board->placeAllMines(cellX, cellY);
         GameUI::board->updateAllCellAdjacencies();
         GameUI::board->printBoard();
-        GameUI::gameStartTime = std::chrono::steady_clock::now();
+        Timer::startTimer();
     }
     
     if (cell.isMine)
@@ -584,7 +580,7 @@ void flagCell()
 
     if (GameUI::nbClicks == 1)
     {
-        GameUI::gameStartTime = std::chrono::steady_clock::now();
+        Timer::startTimer();
     }
 
     Cell &cell = GameUI::board->getCell(cellX, cellY);
@@ -717,8 +713,8 @@ void finishGame(bool isWon)
         GameUI::board->remainingMines = 0;
     }
 
-    GameUI::gameEndTime = std::chrono::steady_clock::now();
-    int durationMs = std::chrono::duration_cast<std::chrono::milliseconds>(GameUI::gameEndTime - GameUI::gameStartTime).count();
+    Timer::endTimer();
+    int durationMs = Timer::getElapsedTimeMilliseconds(Timer::gameStartTime, Timer::gameEndTime);
 
     int seconds = durationMs / 1000;
     int milliseconds = durationMs % 1000;
@@ -736,6 +732,6 @@ void resetBoard()
     GameUI::nbClicks = 0;
     GameUI::leftClicks = 0;
     GameUI::rightClicks = 0;
-    GameUI::elapsedSeconds = 0;
+    Timer::resetTimer();
     drawGameInfo();
 }
