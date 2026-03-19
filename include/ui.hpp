@@ -28,6 +28,7 @@ class GameUI
         static int nbClicks;
         static int leftClicks;
         static int rightClicks;
+        static int chordClicks;
 };
 
 void create_window();

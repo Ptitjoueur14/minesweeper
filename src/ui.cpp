@@ -30,6 +30,7 @@ SDL_Texture *GameUI::mineTexture = nullptr;
 int GameUI::nbClicks = 0;
 int GameUI::leftClicks = 0;
 int GameUI::rightClicks = 0;
+int GameUI::chordClicks = 0;
 
 const char clickCellKey = 'a';
 const char flagCellKey = 'q';
@@ -455,15 +456,17 @@ void drawGameFinishInfo()
              GameUI::nbClicks);
     std::string clicksText = clicksBuffer;
     
-    char leftClicksBuffer[100];
     snprintf(clicksBuffer, sizeof(clicksBuffer), "Left clicks: %i",
              GameUI::leftClicks);
     std::string leftClicksText = clicksBuffer;
     
-    char rightClicksBuffer[100];
     snprintf(clicksBuffer, sizeof(clicksBuffer), "Right clicks: %i",
              GameUI::rightClicks);
     std::string rightClicksText = clicksBuffer;
+    
+    snprintf(clicksBuffer, sizeof(clicksBuffer), "Chord clicks: %i",
+             GameUI::rightClicks);
+    std::string chordClicksText = clicksBuffer;
 
     SDL_Rect timerRect;
     timerRect.x = (WINDOW_WIDTH - GAME_INFO_OFFSET) + 30;
@@ -473,30 +476,37 @@ void drawGameFinishInfo()
     
     SDL_Rect clicksRect;
     clicksRect.x = (WINDOW_WIDTH - GAME_INFO_OFFSET) + 30;
-    clicksRect.y = GAME_INFO_OFFSET + 200;
+    clicksRect.y = GAME_INFO_OFFSET + 50;
     clicksRect.w = 300;
     clicksRect.h = 50;
     
     SDL_Rect leftClicksRect;
     leftClicksRect.x = (WINDOW_WIDTH - GAME_INFO_OFFSET) + 30;
-    leftClicksRect.y = GAME_INFO_OFFSET + 230;
+    leftClicksRect.y = GAME_INFO_OFFSET + 80;
     leftClicksRect.w = 300;
     leftClicksRect.h = 50;
     
     SDL_Rect rightClicksRect;
     rightClicksRect.x = (WINDOW_WIDTH - GAME_INFO_OFFSET) + 30;
-    rightClicksRect.y = GAME_INFO_OFFSET + 260;
+    rightClicksRect.y = GAME_INFO_OFFSET + 110;
     rightClicksRect.w = 300;
     rightClicksRect.h = 50;
+    
+    SDL_Rect chordClicksRect;
+    chordClicksRect.x = (WINDOW_WIDTH - GAME_INFO_OFFSET) + 30;
+    chordClicksRect.y = GAME_INFO_OFFSET + 140;
+    chordClicksRect.w = 300;
+    chordClicksRect.h = 50;
 
     std::cout << "Clicks : " << GameUI::nbClicks << " (Left clicks: " <<
-        GameUI::leftClicks << ", Right clicks: " << GameUI::rightClicks << std::endl;
+        GameUI::leftClicks << ", Right clicks: " << GameUI::rightClicks << ", Chord clicks: " << GameUI::chordClicks << ")" << std::endl;
 
     SDL_Color gameFinishTextColor = {255, 255, 255};
     drawText(timeText, timerRect, gameFinishTextColor);
     drawText(clicksText, clicksRect, gameFinishTextColor);
     drawText(leftClicksText, leftClicksRect, gameFinishTextColor);
     drawText(rightClicksText, rightClicksRect, gameFinishTextColor);
+    drawText(chordClicksText, chordClicksRect, gameFinishTextColor);
 }
 
 // Draws a colored square in the cell (cellX, cellY)
@@ -557,10 +567,8 @@ void clickCell()
     }
     
     // std::cout << "Clicked on cell " << cellX << "; " << cellY << std::endl;
-    GameUI::nbClicks++;
-    GameUI::leftClicks++;
 
-    if (GameUI::leftClicks == 1)
+    if (GameUI::leftClicks == 0)
     {
         GameUI::board->placeAllMines(cellX, cellY);
         GameUI::board->updateAllCellAdjacencies();
@@ -570,6 +578,8 @@ void clickCell()
     
     if (cell.isMine)
     {
+        GameUI::nbClicks++;
+        GameUI::leftClicks++;
         std::cout << "You clicked on a mine and lost !" << std::endl;
         cell.isRevealed = true;
         GameUI::isGameFinished = true;
@@ -581,6 +591,8 @@ void clickCell()
         return;
     }
 
+    GameUI::nbClicks++;
+    GameUI::leftClicks++;
     revealCell(cellX, cellY);
     checkForGameFinish();
 }
@@ -709,6 +721,9 @@ void chordCell(int cellX, int cellY)
     {
         return;
     }
+
+    GameUI::nbClicks++;
+    GameUI::chordClicks++;
     
     int totalFlaggedCellsCont = 0;
     
