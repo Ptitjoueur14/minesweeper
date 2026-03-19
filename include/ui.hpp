@@ -36,6 +36,8 @@ void drawStaticUI();
 void redrawBoardUI();
 void drawGameInfo();
 
+void updateCellSize();
+
 void drawSquare(int cellX, int cellY, SDL_Color color);
 void drawNumber(int cellX, int cellY);
 
