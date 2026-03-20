@@ -22,7 +22,17 @@ class Board
         
         int totalCells;
         int remainingMines;
-        int board3BV; // The calculated 3BV of the board
+
+        // Game stats
+        float solvingTime; // The time in seconds taken to solve the board
+        int solved3BV; // The solved 3BV of the board, excluding unrevealed cells
+        int total3BV; // The total 3BV of the board, including unrevealed cells
+        float solved3BVPerSecond; // The solved 3BV/s (solved3BV / solvingTime)
+        int totalClicks;
+        int leftClicks;
+        int rightClicks;
+        int chordClicks;
+        int efficiency; // The efficiency of the board (solved3BV / totalClicks * 100)
 
         Board(int w, int h, int mines);
         
@@ -40,10 +50,10 @@ class Board
         void updateAllCellAdjacencies();
 
         void expandConnectedZeroRegion(std::vector<bool> &visited, int cellX, int cellY);
-        int countZeroRegions();
+        int countZeroRegions(bool isSolved);
         bool isAdjacentToZero(int cellX, int cellY);
-        int countIsolatedNumbers();
-        void calculate3BV(); // Calculate the 3BV of the board
+        int countIsolatedNumbers(bool isSolved);
+        int calculate3BV(bool isSolved); // Calculate the 3BV of the board
 
     private:
         std::mt19937 rng;

@@ -88,7 +88,7 @@ void Board::placeRandomMine(int firstClickX, int firstClickY)
 
 void Board::placeAllMines(int firstClickX, int firstClickY)
 {
-    std::cout << "Placing all mines..." << std::endl;
+    std::cout << "------------------------------------------------------------------" << std::endl;
     std::cout << "Placing " << minesCount << " random mines : ";
     
     for (int i = 0; i < minesCount; i++)
@@ -167,7 +167,7 @@ void Board::expandConnectedZeroRegion(std::vector<bool> &visited, int cellX, int
     }
 }
 
-int Board::countZeroRegions()
+int Board::countZeroRegions(bool isSolved)
 {
     std::vector<bool> visited(totalCells, false);
     int zeroRegions = 0;
@@ -178,7 +178,7 @@ int Board::countZeroRegions()
         {
             Cell &cell = getCell(x, y);
 
-            if (cell.isMine || cell.adjacentMines != 0)
+            if (cell.isMine || cell.adjacentMines != 0 || (!isSolved && !cell.isRevealed))
             {
                 continue;
             }
@@ -218,7 +218,7 @@ bool Board::isAdjacentToZero(int cellX, int cellY)
     return false;
 }
 
-int Board::countIsolatedNumbers()
+int Board::countIsolatedNumbers(bool isSolved)
 {
     int isolatedNumbers = 0;
     for (int y = 0; y < height; y++)
@@ -227,7 +227,7 @@ int Board::countIsolatedNumbers()
         {
             Cell &cell = getCell(x, y);
 
-            if (cell.isMine || cell.adjacentMines == 0)
+            if (cell.isMine || cell.adjacentMines == 0 || (!isSolved && !cell.isRevealed))
             {
                 continue;
             }
@@ -242,15 +242,13 @@ int Board::countIsolatedNumbers()
     return isolatedNumbers;
 }
 
-void Board::calculate3BV()
+int Board::calculate3BV(bool isSolved)
 {
     // Count connected zero regions
-    int zeroRegions = countZeroRegions();
+    int zeroRegions = countZeroRegions(isSolved);
 
     // Count isolated number cells not adjacent to zero regions
-    int isolatedNumbers = countIsolatedNumbers();
+    int isolatedNumbers = countIsolatedNumbers(isSolved);
 
-    board3BV = zeroRegions + isolatedNumbers;
-    std::cout << "Board 3BV: " << board3BV << " (Connected zero regions: " <<
-        zeroRegions << ", Isolated numbers: " << isolatedNumbers << ")" << std::endl;
+    return zeroRegions + isolatedNumbers;
 }

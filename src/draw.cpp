@@ -253,7 +253,7 @@ void Draw::drawNumber(int cellX, int cellY)
 void Draw::drawGameStatistics()
 {
     SDL_Rect statsRect;
-    statsRect.x = 10;
+    statsRect.x = 0;
     statsRect.y = 10;
     statsRect.w = 400;
     statsRect.h = 30;
@@ -272,7 +272,7 @@ void Draw::drawGameInfo()
 {
     SDL_Rect resetRect;
     resetRect.x = 600;
-    resetRect.y = 10;
+    resetRect.y = 0;
     resetRect.w = 1000;
     resetRect.h = 30;
 
@@ -290,13 +290,13 @@ void Draw::drawGameInfo()
     
     SDL_Rect minesRect;
     minesRect.x = 800;
-    minesRect.y = 10;
+    minesRect.y = 0;
     minesRect.w = 100;
     minesRect.h = 30;
 
     SDL_Rect timerRect;
     timerRect.x = 1200;
-    timerRect.y = 10;
+    timerRect.y = 0;
     timerRect.w = 100;
     timerRect.h = 30;
 
@@ -312,39 +312,60 @@ void Draw::drawGameFinishInfo()
     int timeSeconds = Timer::finalTimeSeconds;
     int timeMilliseconds = Timer::finalTimeMilliseconds;
 
+    std::string gameStatusText;
+    
     char buffer[100];
     snprintf(buffer, sizeof(buffer), "Time: %i.%03i sec", timeSeconds, timeMilliseconds);
     std::string timeText = buffer;
+
+    int solved3BV = GameUI::board->solved3BV;
+    std::string board3BVText;
     
-    snprintf(buffer, sizeof(buffer), "3BV: %i", GameUI::board->board3BV);
-    std::string board3BVText = buffer;
+    if (GameUI::isGameWon)
+    {
+        snprintf(buffer, sizeof(buffer), "3BV: %i", solved3BV);
+        board3BVText = buffer;
+        gameStatusText = "Game completed";
+    }
+    else
+    {
+        int total3BV = GameUI::board->total3BV;
+        snprintf(buffer, sizeof(buffer), "3BV: %i / %i", solved3BV, total3BV);
+        board3BVText = buffer;
+        gameStatusText = "Game failed";
+    }
 
     float totalTime = timeSeconds + (float) timeMilliseconds / 1000;
-    snprintf(buffer, sizeof(buffer), "3BV/s: %.3f", GameUI::board->board3BV / totalTime);
+    snprintf(buffer, sizeof(buffer), "3BV/s: %.3f", solved3BV / totalTime);
     std::string board3BVPerSecondText = buffer;
 
     snprintf(buffer, sizeof(buffer), "Clicks: %i",
-             GameUI::nbClicks);
+             GameUI::board->totalClicks);
     std::string clicksText = buffer;
     
     snprintf(buffer, sizeof(buffer), "Left clicks: %i",
-             GameUI::leftClicks);
+             GameUI::board->leftClicks);
     std::string leftClicksText = buffer;
     
     snprintf(buffer, sizeof(buffer), "Right clicks: %i",
-             GameUI::rightClicks);
+             GameUI::board->rightClicks);
     std::string rightClicksText = buffer;
     
     snprintf(buffer, sizeof(buffer), "Chord clicks: %i",
-             GameUI::chordClicks);
+             GameUI::board->chordClicks);
     std::string chordClicksText = buffer;
 
-    int efficiency = (float) GameUI::board->board3BV / GameUI::nbClicks * 100;
     snprintf(buffer, sizeof(buffer), "Efficiency: %i",
-             efficiency);
+             GameUI::board->efficiency);
     std::string efficiencyText = buffer;
     efficiencyText += "%";
 
+    SDL_Rect gameStatusRect;
+    gameStatusRect.x = (WINDOW_WIDTH - GAME_INFO_OFFSET) + 30;
+    gameStatusRect.y = GAME_INFO_OFFSET - 60;
+    gameStatusRect.w = 150;
+    gameStatusRect.h = 50;
+    
     SDL_Rect timerRect;
     timerRect.x = (WINDOW_WIDTH - GAME_INFO_OFFSET) + 30;
     timerRect.y = GAME_INFO_OFFSET;
@@ -394,6 +415,17 @@ void Draw::drawGameFinishInfo()
     efficiencyRect.h = 50;
 
     SDL_Color gameFinishTextColor = {255, 255, 255};
+    SDL_Color gameStatusWonTextColor = {70, 224, 75};
+    SDL_Color gameStatusLostTextColor = {224, 70, 70};
+
+    if (GameUI::isGameWon)
+    {
+        drawText(gameStatusText, gameStatusRect, gameStatusWonTextColor);
+    }
+    else
+    {
+        drawText(gameStatusText, gameStatusRect, gameStatusLostTextColor);  
+    }
 
     drawText(timeText, timerRect, gameFinishTextColor);
     drawText(board3BVText, board3BVRect, gameFinishTextColor);

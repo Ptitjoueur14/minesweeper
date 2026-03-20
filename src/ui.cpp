@@ -269,7 +269,6 @@ void clickCell()
         GameUI::board->updateAllCellAdjacencies();
         GameUI::board->printBoard();
         Timer::startTimer();
-        GameUI::board->calculate3BV();
     }
     
     if (cell.isMine)
@@ -379,7 +378,6 @@ void flagCell()
         GameUI::board->updateAllCellAdjacencies();
         GameUI::board->printBoard();
         Timer::startTimer();
-        GameUI::board->calculate3BV();
     }
 
     GameUI::nbClicks++;
@@ -493,6 +491,19 @@ void checkForGameFinish()
 // Place all unplaced flags for cells that are mines but were not revealed
 void finishGame(bool isWon)
 {
+    Timer::endTimer();
+    
+    GameUI::board->solvingTime = Timer::finalTimeSeconds + (float) Timer::finalTimeMilliseconds / 1000;
+    GameUI::board->solved3BV = GameUI::board->calculate3BV(isWon);
+    GameUI::board->total3BV = GameUI::board->calculate3BV(true);
+
+    GameUI::board->solved3BVPerSecond = GameUI::board->solved3BV / GameUI::board->solvingTime;
+    GameUI::board->totalClicks = GameUI::nbClicks;
+    GameUI::board->leftClicks = GameUI::leftClicks;
+    GameUI::board->rightClicks = GameUI::rightClicks;
+    GameUI::board->chordClicks = GameUI::chordClicks;
+    GameUI::board->efficiency = (float) GameUI::board->solved3BV / GameUI::board->totalClicks * 100;
+    
     GameUI::isGameFinished = true;
     GameUI::isGameWon = isWon;
 
@@ -501,11 +512,27 @@ void finishGame(bool isWon)
         GameUI::board->remainingMines = 0;
     }
 
-    Timer::endTimer();
-    std::cout << "Finished game in " << Timer::finalTimeSeconds << "." << Timer::finalTimeMilliseconds << "s" << std::endl;
-    std::cout << "Clicks : " << GameUI::nbClicks << " (Left clicks: " <<
+    std::cout << "Finished game in " << Timer::finalTimeSeconds << "."
+        << Timer::finalTimeMilliseconds << " sec" << std::endl;
+
+    if (isWon)
+    {
+        std::cout << "3BV: " << GameUI::board->solved3BV << std::endl; 
+    }
+    else
+    {
+        std::cout << "3BV: " << GameUI::board->solved3BV << " / " << GameUI::board->total3BV << std::endl;
+    }
+
+    char solved3BVPerSecondBuffer[20];
+    snprintf(solved3BVPerSecondBuffer, sizeof(solved3BVPerSecondBuffer), "3BV/s: %.3f", GameUI::board->solved3BVPerSecond);
+    std::string solved3BVPerSecondString = solved3BVPerSecondBuffer;
+    std::cout << solved3BVPerSecondString << std::endl;
+    
+    std::cout << "Clicks: " << GameUI::nbClicks << " (Left clicks: " <<
         GameUI::leftClicks << ", Right clicks: " << GameUI::rightClicks <<
         ", Chord clicks: " << GameUI::chordClicks << ")" << std::endl;
+    std::cout << "Efficiency: " << GameUI::board->efficiency << "%" << std::endl;
 }
 
 void resetBoard()
