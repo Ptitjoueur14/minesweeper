@@ -1,8 +1,5 @@
 #include <iostream>
 #include "../include/board.hpp"
-#include <cstdlib>
-#include <ctime>
-#include <random>
 
 #define COLOR_RESET "\033[0m"
 #define COLOR_RED "\033[31m"
@@ -78,7 +75,7 @@ void Board::placeRandomMine(int firstClickX, int firstClickY)
     int newMineIndex = -1;
     int attemptsCount = 0;
 
-    int firstClickIndex = width * firstClickY + firstClickX;
+    int firstClickIndex = firstClickY * width + firstClickX;
     while (newMineIndex == -1 || newMineIndex == firstClickIndex  || grid[newMineIndex].isMine)
     {
         newMineIndex = getRandomNumber(totalCells);
@@ -123,6 +120,7 @@ void Board::updateCellAdjacency(int w, int h)
     getCell(w, h).adjacentMines = totalAdjacentMines;
 }
 
+
 void Board::updateAllCellAdjacencies()
 {
     for (int y = 0; y < height; y++)
@@ -132,4 +130,127 @@ void Board::updateAllCellAdjacencies()
             updateCellAdjacency(x, y);
         }
     }
+}
+
+void Board::expandConnectedZeroRegion(std::vector<bool> &visited, int cellX, int cellY)
+{
+    if (!isInBounds(cellX, cellY))
+    {
+        return;
+    }
+
+    int cellIndex = cellY * width + cellX;
+    if (visited[cellIndex])
+    {
+        return;
+    }
+    
+    Cell &cell = getCell(cellX, cellY);
+    if (cell.isMine || cell.adjacentMines != 0)
+    {
+        return;
+    }
+
+    visited[cellIndex] = true; // Mark Zero cell as visited
+    
+    for (int dx = cellX - 1; dx <= cellX + 1; dx++)
+    {
+        for (int dy = cellY - 1; dy <= cellY + 1; dy++)
+        {
+            if (dx == cellX && dy == cellY)
+            {
+                continue;
+            }
+            
+            expandConnectedZeroRegion(visited, dx, dy);
+        }
+    }
+}
+
+int Board::countZeroRegions()
+{
+    std::vector<bool> visited(totalCells, false);
+    int zeroRegions = 0;
+
+    for (int y = 0; y < height; y++)
+    {
+        for (int x = 0; x < width; x++)
+        {
+            Cell &cell = getCell(x, y);
+
+            if (cell.isMine || cell.adjacentMines != 0)
+            {
+                continue;
+            }
+
+            int cellIndex = y * width + x;
+
+            if (!visited[cellIndex])
+            {
+                zeroRegions++;
+                expandConnectedZeroRegion(visited, x, y);
+            }
+        }
+    }
+
+    return zeroRegions;
+}
+
+bool Board::isAdjacentToZero(int cellX, int cellY)
+{
+    for (int dy = cellY - 1; dy <= cellY + 1; dy++)
+    {
+        for (int dx = cellX - 1; dx <= cellX + 1; dx++)
+        {
+            if (!isInBounds(dx, dy) || (dx == cellX && dy == cellY))
+            {
+                continue;
+            }
+
+            Cell &neighborCell = getCell(dx, dy);
+            if (!neighborCell.isMine && neighborCell.adjacentMines == 0)
+            {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+int Board::countIsolatedNumbers()
+{
+    int isolatedNumbers = 0;
+    for (int y = 0; y < height; y++)
+    {
+        for (int x = 0; x < width; x++)
+        {
+            Cell &cell = getCell(x, y);
+
+            if (cell.isMine || cell.adjacentMines == 0)
+            {
+                continue;
+            }
+
+            if (!isAdjacentToZero(x, y))
+            {
+                isolatedNumbers++;
+            }
+        }
+    }
+
+    return isolatedNumbers;
+}
+
+void Board::calculate3BV()
+{
+    // Count connected zero regions
+    int zeroRegions = countZeroRegions();
+
+    // Count isolated number cells not adjacent to zero regions
+    int isolatedNumbers = countIsolatedNumbers();
+
+    board3BV = zeroRegions + isolatedNumbers;
+    std::cout << "Board 3BV: " << board3BV << " (Connected zero regions: " <<
+        zeroRegions << ", Isolated numbers: " << isolatedNumbers << ")" << std::endl;
 }

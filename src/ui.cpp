@@ -263,12 +263,13 @@ void clickCell()
     
     // std::cout << "Clicked on cell " << cellX << "; " << cellY << std::endl;
 
-    if (GameUI::leftClicks == 0)
+    if (GameUI::nbClicks == 0)
     {
         GameUI::board->placeAllMines(cellX, cellY);
         GameUI::board->updateAllCellAdjacencies();
         GameUI::board->printBoard();
         Timer::startTimer();
+        GameUI::board->calculate3BV();
     }
     
     if (cell.isMine)
@@ -371,13 +372,18 @@ void flagCell()
     }
     
     // std::cout << "Flagged cell " << cellX << "; " << cellY << std::endl;
+
+    if (GameUI::nbClicks == 0)
+    {
+        GameUI::board->placeAllMines(-1, -1);
+        GameUI::board->updateAllCellAdjacencies();
+        GameUI::board->printBoard();
+        Timer::startTimer();
+        GameUI::board->calculate3BV();
+    }
+
     GameUI::nbClicks++;
     GameUI::rightClicks++;
-
-    if (GameUI::nbClicks == 1)
-    {
-        Timer::startTimer();
-    }
 
     Cell &cell = GameUI::board->getCell(cellX, cellY);
     if (!cell.isRevealed)

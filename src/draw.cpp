@@ -312,26 +312,38 @@ void Draw::drawGameFinishInfo()
     int timeSeconds = Timer::finalTimeSeconds;
     int timeMilliseconds = Timer::finalTimeMilliseconds;
 
-    char timeBuffer[100];
-    snprintf(timeBuffer, sizeof(timeBuffer), "Time: %i.%i s", timeSeconds, timeMilliseconds);
-    std::string timeText = timeBuffer;
+    char buffer[100];
+    snprintf(buffer, sizeof(buffer), "Time: %i.%03i sec", timeSeconds, timeMilliseconds);
+    std::string timeText = buffer;
+    
+    snprintf(buffer, sizeof(buffer), "3BV: %i", GameUI::board->board3BV);
+    std::string board3BVText = buffer;
 
-    char clicksBuffer[100];
-    snprintf(clicksBuffer, sizeof(clicksBuffer), "Clicks: %i",
+    float totalTime = timeSeconds + (float) timeMilliseconds / 1000;
+    snprintf(buffer, sizeof(buffer), "3BV/s: %.3f", GameUI::board->board3BV / totalTime);
+    std::string board3BVPerSecondText = buffer;
+
+    snprintf(buffer, sizeof(buffer), "Clicks: %i",
              GameUI::nbClicks);
-    std::string clicksText = clicksBuffer;
+    std::string clicksText = buffer;
     
-    snprintf(clicksBuffer, sizeof(clicksBuffer), "Left clicks: %i",
+    snprintf(buffer, sizeof(buffer), "Left clicks: %i",
              GameUI::leftClicks);
-    std::string leftClicksText = clicksBuffer;
+    std::string leftClicksText = buffer;
     
-    snprintf(clicksBuffer, sizeof(clicksBuffer), "Right clicks: %i",
+    snprintf(buffer, sizeof(buffer), "Right clicks: %i",
              GameUI::rightClicks);
-    std::string rightClicksText = clicksBuffer;
+    std::string rightClicksText = buffer;
     
-    snprintf(clicksBuffer, sizeof(clicksBuffer), "Chord clicks: %i",
+    snprintf(buffer, sizeof(buffer), "Chord clicks: %i",
              GameUI::chordClicks);
-    std::string chordClicksText = clicksBuffer;
+    std::string chordClicksText = buffer;
+
+    int efficiency = (float) GameUI::board->board3BV / GameUI::nbClicks * 100;
+    snprintf(buffer, sizeof(buffer), "Efficiency: %i",
+             efficiency);
+    std::string efficiencyText = buffer;
+    efficiencyText += "%";
 
     SDL_Rect timerRect;
     timerRect.x = (WINDOW_WIDTH - GAME_INFO_OFFSET) + 30;
@@ -339,37 +351,58 @@ void Draw::drawGameFinishInfo()
     timerRect.w = 150;
     timerRect.h = 50;
     
+    SDL_Rect board3BVRect;
+    board3BVRect.x = (WINDOW_WIDTH - GAME_INFO_OFFSET) + 30;
+    board3BVRect.y = GAME_INFO_OFFSET + 30;
+    board3BVRect.w = 150;
+    board3BVRect.h = 50;
+    
+    SDL_Rect board3BVPerSecondRect;
+    board3BVPerSecondRect.x = (WINDOW_WIDTH - GAME_INFO_OFFSET) + 30;
+    board3BVPerSecondRect.y = GAME_INFO_OFFSET + 60;
+    board3BVPerSecondRect.w = 150;
+    board3BVPerSecondRect.h = 50;
+    
     SDL_Rect clicksRect;
     clicksRect.x = (WINDOW_WIDTH - GAME_INFO_OFFSET) + 30;
-    clicksRect.y = GAME_INFO_OFFSET + 50;
+    clicksRect.y = GAME_INFO_OFFSET + 90;
     clicksRect.w = 300;
     clicksRect.h = 50;
     
     SDL_Rect leftClicksRect;
     leftClicksRect.x = (WINDOW_WIDTH - GAME_INFO_OFFSET) + 30;
-    leftClicksRect.y = GAME_INFO_OFFSET + 80;
+    leftClicksRect.y = GAME_INFO_OFFSET + 120;
     leftClicksRect.w = 300;
     leftClicksRect.h = 50;
     
     SDL_Rect rightClicksRect;
     rightClicksRect.x = (WINDOW_WIDTH - GAME_INFO_OFFSET) + 30;
-    rightClicksRect.y = GAME_INFO_OFFSET + 110;
+    rightClicksRect.y = GAME_INFO_OFFSET + 150;
     rightClicksRect.w = 300;
     rightClicksRect.h = 50;
     
     SDL_Rect chordClicksRect;
     chordClicksRect.x = (WINDOW_WIDTH - GAME_INFO_OFFSET) + 30;
-    chordClicksRect.y = GAME_INFO_OFFSET + 140;
+    chordClicksRect.y = GAME_INFO_OFFSET + 180;
     chordClicksRect.w = 300;
     chordClicksRect.h = 50;
+    
+    SDL_Rect efficiencyRect;
+    efficiencyRect.x = (WINDOW_WIDTH - GAME_INFO_OFFSET) + 30;
+    efficiencyRect.y = GAME_INFO_OFFSET + 210;
+    efficiencyRect.w = 300;
+    efficiencyRect.h = 50;
 
     SDL_Color gameFinishTextColor = {255, 255, 255};
 
     drawText(timeText, timerRect, gameFinishTextColor);
+    drawText(board3BVText, board3BVRect, gameFinishTextColor);
+    drawText(board3BVPerSecondText, board3BVPerSecondRect, gameFinishTextColor);
     drawText(clicksText, clicksRect, gameFinishTextColor);
     drawText(leftClicksText, leftClicksRect, gameFinishTextColor);
     drawText(rightClicksText, rightClicksRect, gameFinishTextColor);
     drawText(chordClicksText, chordClicksRect, gameFinishTextColor);
+    drawText(efficiencyText, efficiencyRect, gameFinishTextColor);
 }
 
 // Draws a colored square in the cell (cellX, cellY)
