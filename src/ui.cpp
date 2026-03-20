@@ -79,7 +79,7 @@ void create_window()
 
     updateCellSize();
     int fontSize = GameUI::cellSize / 2;
-    GameUI::cellFont = TTF_OpenFont("assets/minesweeper-font/mine-sweeper.otf", fontSize);
+    GameUI::cellFont = TTF_OpenFont("assets/fonts/minesweeper-font/minesweeper.otf", fontSize);
     if (!GameUI::cellFont)
     {
         std::cerr << "Failed to load font: " << TTF_GetError() << std::endl;
@@ -91,7 +91,7 @@ void create_window()
         return;
     }
 
-    GameUI::UIFont = TTF_OpenFont("assets/minesweeper-font/mine-sweeper.otf", 15);
+    GameUI::UIFont = TTF_OpenFont("assets/fonts/open-sans-font/open-sans.ttf", 25);
     if (!GameUI::UIFont)
     {
         std::cerr << "Failed to load font: " << TTF_GetError() << std::endl;
