@@ -363,10 +363,6 @@ void Draw::drawGameFinishInfo()
     chordClicksRect.w = 300;
     chordClicksRect.h = 50;
 
-    std::cout << "Clicks : " << GameUI::nbClicks << " (Left clicks: " <<
-        GameUI::leftClicks << ", Right clicks: " << GameUI::rightClicks <<
-        ", Chord clicks: " << GameUI::chordClicks << ")" << std::endl;
-
     SDL_Color gameFinishTextColor = {255, 255, 255};
 
     drawText(timeText, timerRect, gameFinishTextColor);
@@ -417,4 +413,23 @@ void Draw::drawTextureInCell(int cellX, int cellY, SDL_Texture *texture)
     {
         std::cerr << "SDL_RenderCopy failed: " << SDL_GetError() << std::endl;
     }
+}
+
+// Main function to draw everything in the UI
+void Draw::renderFrame()
+{
+    SDL_SetRenderDrawColor(GameUI::renderer, 0, 0, 0, 255);
+    SDL_RenderClear(GameUI::renderer);
+
+    Draw::drawStaticUI();
+    Draw::drawGameInfo();
+    Draw::drawGameStatistics();
+    Draw::drawAllCells();
+
+    if (GameUI::isGameFinished)
+    {
+        Draw::drawGameFinishInfo();
+    }
+
+    SDL_RenderPresent(GameUI::renderer);
 }

@@ -31,6 +31,9 @@ class Draw
         static void drawSquare(int cellX, int cellY, SDL_Color color);
 
         static void drawTextureInCell(int cellX, int cellY, SDL_Texture *texture);
+
+        // Main function to draw everything in the UI
+        static void renderFrame();
 };
 
 #endif

@@ -130,14 +130,7 @@ void create_window()
         SDL_Quit();
         return;
     }
-    
-    Draw::drawStaticUI();
-    Draw::drawGameInfo();    
-    Draw::drawAllCells();
-    Draw::drawGameStatistics();
-
-    SDL_RenderPresent(GameUI::renderer);
-    
+        
     bool isRunning = true;
 
     while (isRunning)
@@ -154,35 +147,20 @@ void create_window()
             if ((GameUI::event.type == SDL_MOUSEBUTTONUP && GameUI::event.button.button == SDL_BUTTON_LEFT) ||
                 (GameUI::event.type == SDL_KEYUP && GameUI::event.key.keysym.sym == SDLK_a))
             {
-                Draw::drawStaticUI();
-                Draw::drawGameStatistics();
-                Draw::drawGameInfo();
                 clickCell();
-                Draw::redrawBoardUI();
-                SDL_RenderPresent(GameUI::renderer);
             }
             
             // Flag cell with right click or "Q"
             if ((GameUI::event.type == SDL_MOUSEBUTTONDOWN && GameUI::event.button.button == SDL_BUTTON_RIGHT) ||
                 (GameUI::event.type == SDL_KEYDOWN && GameUI::event.key.keysym.sym == SDLK_q))
             {
-                Draw::drawStaticUI();
-                Draw::drawGameStatistics();
-                Draw::drawGameInfo();
                 flagCell();
-                Draw::redrawBoardUI();
-                SDL_RenderPresent(GameUI::renderer);
             }
 
             // Reset board
             if (GameUI::event.type == SDL_KEYDOWN && GameUI::event.key.keysym.sym == SDLK_SPACE)
             {
                 resetBoard();
-                Draw::drawStaticUI();
-                Draw::drawGameStatistics();
-                Draw::redrawBoardUI();
-                Draw::drawGameInfo();
-                SDL_RenderPresent(GameUI::renderer);
             }
         }
 
@@ -192,6 +170,7 @@ void create_window()
             Draw::drawGameInfo();
             SDL_RenderPresent(GameUI::renderer);
         }
+        Draw::renderFrame();
         
         SDL_Delay(16);
     }
@@ -518,8 +497,9 @@ void finishGame(bool isWon)
 
     Timer::endTimer();
     std::cout << "Finished game in " << Timer::finalTimeSeconds << "." << Timer::finalTimeMilliseconds << "s" << std::endl;
-
-    Draw::drawGameFinishInfo();
+    std::cout << "Clicks : " << GameUI::nbClicks << " (Left clicks: " <<
+        GameUI::leftClicks << ", Right clicks: " << GameUI::rightClicks <<
+        ", Chord clicks: " << GameUI::chordClicks << ")" << std::endl;
 }
 
 void resetBoard()
