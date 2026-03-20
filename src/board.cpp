@@ -29,6 +29,14 @@ Board::Board(int w, int h, int mines) : rng(std::random_device{}())
     
     remainingMines = minesCount;
     grid.resize(totalCells);
+
+    for (Cell &cell : grid)
+    {
+        cell.isMine = false;
+        cell.isRevealed = false;
+        cell.isFlagged = false;
+        cell.adjacentMines = 0;
+    }
 };
 
 Cell& Board::getCell(int w, int h)

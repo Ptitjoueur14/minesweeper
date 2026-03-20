@@ -35,8 +35,8 @@ int main(int argc, char** argv)
         return 1;
     }
     
-    Board board = Board(width, height, mines);
-    GameUI::board = &board;
+    Board *board = new Board(width, height, mines);
+    GameUI::board = board;
 
     create_window();
     

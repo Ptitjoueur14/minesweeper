@@ -154,11 +154,11 @@ void create_window()
             if ((GameUI::event.type == SDL_MOUSEBUTTONUP && GameUI::event.button.button == SDL_BUTTON_LEFT) ||
                 (GameUI::event.type == SDL_KEYUP && GameUI::event.key.keysym.sym == SDLK_a))
             {
-                clickCell();
                 Draw::drawStaticUI();
                 Draw::drawGameStatistics();
-                Draw::redrawBoardUI();
                 Draw::drawGameInfo();
+                clickCell();
+                Draw::redrawBoardUI();
                 SDL_RenderPresent(GameUI::renderer);
             }
             
@@ -166,11 +166,11 @@ void create_window()
             if ((GameUI::event.type == SDL_MOUSEBUTTONDOWN && GameUI::event.button.button == SDL_BUTTON_RIGHT) ||
                 (GameUI::event.type == SDL_KEYDOWN && GameUI::event.key.keysym.sym == SDLK_q))
             {
-                flagCell();
                 Draw::drawStaticUI();
                 Draw::drawGameStatistics();
-                Draw::redrawBoardUI();
                 Draw::drawGameInfo();
+                flagCell();
+                Draw::redrawBoardUI();
                 SDL_RenderPresent(GameUI::renderer);
             }
 
@@ -527,7 +527,15 @@ void resetBoard()
     int width = GameUI::board->width;
     int height = GameUI::board->height;
     int minesCount = GameUI::board->minesCount;
-    *GameUI::board = Board(width, height, minesCount);
+    
+    delete GameUI::board;
+    GameUI::board = new Board(width, height, minesCount);
+
+    if (!GameUI::board)
+    {
+        std::cerr << "ResetBoard: Failed to reset board" << std::endl;
+    }
+    
     GameUI::isGameFinished = false;
     GameUI::isGameWon = false;
     GameUI::nbClicks = 0;

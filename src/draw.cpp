@@ -15,33 +15,59 @@ void Draw::drawStaticUI()
 {
     // TODO: Draw borders at real board borders but still make sure to respect these borders
 
-    SDL_SetRenderDrawColor(GameUI::renderer, 0, 0, 0, 255);
-    SDL_RenderClear(GameUI::renderer);
+    if (SDL_SetRenderDrawColor(GameUI::renderer, 0, 0, 0, 255) < 0)
+    {
+        std::cerr << "Draw: DrawStaticUI: SDL_SetRenderDrawColor failed: " << SDL_GetError() << std::endl;
+    }
+    
+    if (SDL_RenderClear(GameUI::renderer) < 0)
+    {
+        std::cerr << "Draw: DrawStaticUI: SDL_RenderClear failed: " << SDL_GetError() << std::endl;
+    }
 
-    SDL_SetRenderDrawColor(GameUI::renderer, 255, 255, 255, 255);
+    if (SDL_SetRenderDrawColor(GameUI::renderer, 255, 255, 255, 255) < 0)
+    {
+        std::cerr << "Draw: DrawStaticUI: SDL_SetRenderDrawColor failed: " << SDL_GetError() << std::endl;
+    }
 
     int window_offset = 40;
 
     // Draw borders
     // Top line
-    SDL_RenderDrawLine(GameUI::renderer, window_offset, window_offset, WINDOW_WIDTH - GAME_INFO_OFFSET, window_offset);
+    if (SDL_RenderDrawLine(GameUI::renderer, window_offset, window_offset, WINDOW_WIDTH - GAME_INFO_OFFSET, window_offset) < 0)
+    {
+        std::cerr << "Draw: DrawStaticUI: SDL_RenderDrawLine failed: " << SDL_GetError() << std::endl;
+    }
 
     // Left line
-    SDL_RenderDrawLine(GameUI::renderer, window_offset, window_offset, window_offset, WINDOW_HEIGHT - window_offset);
+    if (SDL_RenderDrawLine(GameUI::renderer, window_offset, window_offset, window_offset, WINDOW_HEIGHT - window_offset) < 0)
+    {
+        std::cerr << "Draw: DrawStaticUI: SDL_RenderDrawLine failed: " << SDL_GetError() << std::endl;
+    }
 
     // Right line
-    SDL_RenderDrawLine(GameUI::renderer, WINDOW_WIDTH - GAME_INFO_OFFSET, window_offset, WINDOW_WIDTH - GAME_INFO_OFFSET,
-                       WINDOW_HEIGHT - window_offset);
+    if (SDL_RenderDrawLine(GameUI::renderer, WINDOW_WIDTH - GAME_INFO_OFFSET, window_offset, WINDOW_WIDTH - GAME_INFO_OFFSET,
+                       WINDOW_HEIGHT - window_offset) < 0)
+    {
+        std::cerr << "Draw: DrawStaticUI: SDL_RenderDrawLine failed: " << SDL_GetError() << std::endl;
+    }
 
     // Bottom line
-    SDL_RenderDrawLine(GameUI::renderer, window_offset, WINDOW_HEIGHT - window_offset, WINDOW_WIDTH - GAME_INFO_OFFSET,
-                       WINDOW_HEIGHT - window_offset);
+    if (SDL_RenderDrawLine(GameUI::renderer, window_offset, WINDOW_HEIGHT - window_offset, WINDOW_WIDTH - GAME_INFO_OFFSET,
+                       WINDOW_HEIGHT - window_offset) < 0)
+    {
+        std::cerr << "Draw: DrawStaticUI: SDL_RenderDrawLine failed: " << SDL_GetError() << std::endl;
+    }
 }
 
 // Called when board state changes (on click)
 void Draw::redrawBoardUI()
 {
     updateCellSize();
+    if (GameUI::cellSize < 3)
+    {
+        GameUI::cellSize = 3;
+    }
     
     SDL_Rect boardRect;
     boardRect.x = 50;
@@ -50,8 +76,15 @@ void Draw::redrawBoardUI()
     boardRect.h = GameUI::cellSize * GameUI::board->height;
 
     // Clear only board area
-    SDL_SetRenderDrawColor(GameUI::renderer, 0, 0, 0, 255);
-    SDL_RenderFillRect(GameUI::renderer, &boardRect);
+    if (SDL_SetRenderDrawColor(GameUI::renderer, 0, 0, 0, 255) < 0)
+    {
+        std::cerr << "Draw: RedrawBoardUI: SDL_SetRenderDrawColor failed: " << SDL_GetError() << std::endl;
+    }
+    
+    if (SDL_RenderFillRect(GameUI::renderer, &boardRect) < 0)
+    {
+        std::cerr << "Draw: RedrawBoardUI: SDL_RenderFillRect failed: " << SDL_GetError() << std::endl;
+    }
 
     drawAllCells();
 }
@@ -61,14 +94,14 @@ void Draw::drawTextInCell(const std::string &text, SDL_Rect cellRect, SDL_Color 
     SDL_Surface *surface = TTF_RenderText_Blended(GameUI::cellFont, text.c_str(), color);
     if (!surface)
     {
-        std::cerr << "TTF_RenderText_Blended failed: " << TTF_GetError() << std::endl;
+        std::cerr << "Draw: DrawTextInCell: TTF_RenderText_Blended failed: " << TTF_GetError() << std::endl;
         return;
     }
 
     SDL_Texture *texture = SDL_CreateTextureFromSurface(GameUI::renderer, surface);
     if (!texture)
     {
-        std::cerr << "SDL_CreateTextureFromSurface failed: " << SDL_GetError() << std::endl;
+        std::cerr << "Draw: DrawTextInCell: SDL_CreateTextureFromSurface failed: " << SDL_GetError() << std::endl;
         SDL_FreeSurface(surface);
         return;
     }
@@ -79,7 +112,11 @@ void Draw::drawTextInCell(const std::string &text, SDL_Rect cellRect, SDL_Color 
     textRect.x = cellRect.x + (cellRect.w - textRect.w) / 2;
     textRect.y = cellRect.y + (cellRect.h - textRect.h) / 2;
 
-    SDL_RenderCopy(GameUI::renderer, texture, nullptr, &textRect);
+    if (SDL_RenderCopy(GameUI::renderer, texture, nullptr, &textRect) < 0)
+    {
+        std::cerr << "Draw: DrawTextInCell: SDL_RenderCopy failed: " << SDL_GetError() << std::endl;
+    }
+    
     SDL_DestroyTexture(texture);
     SDL_FreeSurface(surface);
 }
@@ -89,14 +126,14 @@ void Draw::drawText(const std::string &text, SDL_Rect textRect, SDL_Color color)
     SDL_Surface *surface = TTF_RenderText_Blended(GameUI::UIFont, text.c_str(), color);
     if (!surface)
     {
-        std::cerr << "TTF_RenderText_Blended failed: " << TTF_GetError() << std::endl;
+        std::cerr << "Draw: DrawText: TTF_RenderText_Blended failed: " << TTF_GetError() << std::endl;
         return;
     }
 
     SDL_Texture *texture = SDL_CreateTextureFromSurface(GameUI::renderer, surface);
     if (!texture)
     {
-        std::cerr << "SDL_CreateTextureFromSurface failed: " << SDL_GetError() << std::endl;
+        std::cerr << "Draw: DrawText: SDL_CreateTextureFromSurface failed: " << SDL_GetError() << std::endl;
         SDL_FreeSurface(surface);
         return;
     }
@@ -107,7 +144,11 @@ void Draw::drawText(const std::string &text, SDL_Rect textRect, SDL_Color color)
     finalTextRect.x = textRect.x;
     finalTextRect.y = textRect.y;
 
-    SDL_RenderCopy(GameUI::renderer, texture, nullptr, &finalTextRect);
+    if (SDL_RenderCopy(GameUI::renderer, texture, nullptr, &finalTextRect) < 0)
+    {
+        std::cerr << "Draw: DrawText: SDL_RenderCopy failed: " << SDL_GetError() << std::endl;
+    }
+    
     SDL_DestroyTexture(texture);
     SDL_FreeSurface(surface);
 }
@@ -235,8 +276,15 @@ void Draw::drawGameInfo()
     resetRect.w = 1000;
     resetRect.h = 30;
 
-    SDL_SetRenderDrawColor(GameUI::renderer, 0, 0, 0, 255);
-    SDL_RenderFillRect(GameUI::renderer, &resetRect);
+    if (SDL_SetRenderDrawColor(GameUI::renderer, 0, 0, 0, 255) < 0)
+    {
+        std::cerr << "Draw: DrawGameInfo: SDL_SetRenderDrawColor failed: " << SDL_GetError() << std::endl;
+    }
+
+    if (SDL_RenderFillRect(GameUI::renderer, &resetRect) < 0)
+    {
+        std::cerr << "Draw: DrawGameInfo: SDL_RenderFillRect failed: " << SDL_GetError() << std::endl;
+    }
     
     SDL_Color infoTextColor = {255, 0, 0};
     
@@ -317,7 +365,7 @@ void Draw::drawGameFinishInfo()
 
     std::cout << "Clicks : " << GameUI::nbClicks << " (Left clicks: " <<
         GameUI::leftClicks << ", Right clicks: " << GameUI::rightClicks <<
-        ",Chord clicks: " << GameUI::chordClicks << ")" << std::endl;
+        ", Chord clicks: " << GameUI::chordClicks << ")" << std::endl;
 
     SDL_Color gameFinishTextColor = {255, 255, 255};
 
@@ -339,8 +387,16 @@ void Draw::drawSquare(int cellX, int cellY, SDL_Color color)
     cellRect.x = 50 + GameUI::cellSize * cellX;
     cellRect.y = 50 + GameUI::cellSize * cellY;
     
-    SDL_SetRenderDrawColor(GameUI::renderer, color.r, color.g, color.b, color.a);
-    SDL_RenderFillRect(GameUI::renderer, &cellRect); 
+    if (SDL_SetRenderDrawColor(GameUI::renderer, color.r, color.g, color.b, color.a) < 0)
+    {
+        std::cerr << "Draw: DrawSquare: SDL_SetRenderDrawColor failed: " << SDL_GetError() << std::endl;
+        return;
+    }
+    
+    if (SDL_RenderFillRect(GameUI::renderer, &cellRect) < 0)
+    {
+        std::cerr << "Draw: DrawSquare: SDL_RenderFillRect failed: " << SDL_GetError() << std::endl;
+    } 
 }
 
 void Draw::drawTextureInCell(int cellX, int cellY, SDL_Texture *texture)
