@@ -2,6 +2,7 @@
 #include "../include/board.hpp"
 #include <cstdlib>
 #include <ctime>
+#include <random>
 
 #define COLOR_RESET "\033[0m"
 #define COLOR_RED "\033[31m"
@@ -14,7 +15,7 @@
 // Intermediate: 16x16/40
 // Expert: 30x16/99
 
-Board::Board(int w, int h, int mines)
+Board::Board(int w, int h, int mines) : rng(std::random_device{}())
 {
     width = w;
     height = h;
@@ -23,7 +24,7 @@ Board::Board(int w, int h, int mines)
     if (minesCount > totalCells - 1)
     {
         std::cerr << "Board: Can't initialise board with no empty cells" << std::endl;
-        return;
+        exit(1);
     }
     
     remainingMines = minesCount;
@@ -58,10 +59,10 @@ void Board::printBoard()
 }
 
 // Gets a random number between 0 and max
-// Uses classic modulo (biased) method.
 int Board::getRandomNumber(int max)
 {
-    return std::rand() % max;
+    std::uniform_int_distribution<int> dist(0, max - 1);
+    return dist(rng);
 }
 
 void Board::placeRandomMine(int firstClickX, int firstClickY)
@@ -83,7 +84,6 @@ void Board::placeRandomMine(int firstClickX, int firstClickY)
 void Board::placeAllMines(int firstClickX, int firstClickY)
 {
     std::cout << "Placing all mines..." << std::endl;
-    std::srand(std::time(0));
     std::cout << "Placing " << minesCount << " random mines : ";
     
     for (int i = 0; i < minesCount; i++)

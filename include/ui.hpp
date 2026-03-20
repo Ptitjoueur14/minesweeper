@@ -13,7 +13,8 @@
 class GameUI
 {
     public:
-        static TTF_Font *font;
+        static TTF_Font *cellFont;
+        static TTF_Font *UIFont;
         static SDL_Event event;
         static SDL_Window *window;
         static SDL_Renderer *renderer;

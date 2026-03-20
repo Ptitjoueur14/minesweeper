@@ -2,6 +2,7 @@
 #define BOARD_HPP
 
 #include <vector>
+#include <random>
 
 struct Cell
 {
@@ -35,6 +36,9 @@ class Board
         bool isInBounds(int w, int h);
         void updateCellAdjacency(int w, int h);
         void updateAllCellAdjacencies();
+
+    private:
+        std::mt19937 rng; // Uniform pseudo random number generator
 };
 
 #endif
