@@ -558,7 +558,7 @@ void chordCell(int cellX, int cellY, bool isHovered)
         }
     }
 
-    if (totalFlaggedCellsCont != chordCell.adjacentMines)
+    if (totalFlaggedCellsCont != chordCell.adjacentMines && !isHovered)
     {
         return;
     }
