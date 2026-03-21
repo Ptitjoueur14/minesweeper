@@ -140,6 +140,7 @@ void create_window()
         
     bool isRunning = true;
     bool isMouseDown = false;
+    bool canFlag = true;
 
     while (isRunning)
     {
@@ -172,11 +173,22 @@ void create_window()
             }
             
             // Flag cell with right click or "Q"
-            if ((GameUI::event.type == SDL_MOUSEBUTTONDOWN && GameUI::event.button.button == SDL_BUTTON_RIGHT) ||
-                (GameUI::event.type == SDL_KEYDOWN && GameUI::event.key.keysym.sym == SDLK_q))
+            if (canFlag && GameUI::event.type == SDL_MOUSEBUTTONDOWN && GameUI::event.button.button == SDL_BUTTON_RIGHT)
+            {
+                isMouseDown = false;
+                canFlag = false;
+                flagCell();
+            }
+            if (GameUI::event.type == SDL_KEYDOWN && GameUI::event.key.keysym.sym == SDLK_q)
             {
                 isMouseDown = false;
                 flagCell();
+            }
+
+            if ((GameUI::event.type == SDL_MOUSEBUTTONUP && GameUI::event.button.button == SDL_BUTTON_RIGHT) ||
+                (GameUI::event.type == SDL_KEYUP && GameUI::event.key.keysym.sym == SDLK_q))
+            {
+                canFlag = true;
             }
 
             // Reset board
