@@ -518,4 +518,5 @@ void Draw::renderFrame()
     }
 
     SDL_RenderPresent(GameUI::renderer);
+    GameUI::framesRendered++;
 }

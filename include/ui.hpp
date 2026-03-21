@@ -33,6 +33,8 @@ class GameUI
 
         static int pressedCellIndex;
         static std::vector<int> hoveredCells;
+
+        static int framesRendered;
 };
 
 void create_window();

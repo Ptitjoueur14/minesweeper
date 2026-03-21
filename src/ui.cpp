@@ -35,6 +35,7 @@ int GameUI::rightClicks = 0;
 int GameUI::chordClicks = 0;
 int GameUI::pressedCellIndex = -1;
 std::vector<int> GameUI::hoveredCells;
+int GameUI::framesRendered = 0;
 
 const char clickCellKey = 'a';
 const char flagCellKey = 'q';
@@ -142,6 +143,8 @@ void create_window()
     bool isMouseDown = false;
     bool canFlag = true;
 
+    Draw::renderFrame();
+
     while (isRunning)
     {
         while (SDL_PollEvent(&GameUI::event))
@@ -158,10 +161,7 @@ void create_window()
             {
                 isMouseDown = true;
                 clickCell(true);
-            }
-            if (GameUI::event.type == SDL_MOUSEMOTION && isMouseDown)
-            {
-                clickCell(true);
+                Draw::renderFrame();
             }
             
             // Open cell with left click or "A" click
@@ -170,6 +170,7 @@ void create_window()
             {
                 isMouseDown = false;
                 clickCell(false);
+                Draw::renderFrame();
             }
             
             // Flag cell with right click or "Q"
@@ -178,11 +179,13 @@ void create_window()
                 isMouseDown = false;
                 canFlag = false;
                 flagCell();
+                Draw::renderFrame();
             }
             if (GameUI::event.type == SDL_KEYDOWN && GameUI::event.key.keysym.sym == SDLK_q)
             {
                 isMouseDown = false;
                 flagCell();
+                Draw::renderFrame();
             }
 
             if ((GameUI::event.type == SDL_MOUSEBUTTONUP && GameUI::event.button.button == SDL_BUTTON_RIGHT) ||
@@ -195,6 +198,7 @@ void create_window()
             if (GameUI::event.type == SDL_KEYDOWN && GameUI::event.key.keysym.sym == SDLK_s)
             {
                 solve3x3Area();
+                Draw::renderFrame();
             }
 
             // Reset board
@@ -202,16 +206,17 @@ void create_window()
             {
                 isMouseDown = false;
                 resetBoard();
+                Draw::renderFrame();
             }
+
         }
 
         if (Timer::updateTimer())
         {
             //std::cout << "Elapsed time: " << GameUI::elapsedSeconds << std::endl;
-            Draw::drawGameInfo();
+            Draw::renderFrame();
             SDL_RenderPresent(GameUI::renderer);
         }
-        Draw::renderFrame();
         
         SDL_Delay(16);
     }
@@ -680,6 +685,7 @@ void finishGame(bool isWon)
         GameUI::leftClicks << ", Right clicks: " << GameUI::rightClicks <<
         ", Chord clicks: " << GameUI::chordClicks << ")" << std::endl;
     std::cout << "Efficiency: " << GameUI::board->efficiency << "%" << std::endl;
+    std::cout << "Frames rendered: " << GameUI::framesRendered << std::endl;
 }
 
 void resetBoard()
@@ -704,6 +710,7 @@ void resetBoard()
     GameUI::chordClicks = 0;
     GameUI::pressedCellIndex = -1;
     GameUI::hoveredCells.clear();
+    GameUI::framesRendered = 0;
     
     Timer::resetTimer();
     Draw::drawGameInfo();
