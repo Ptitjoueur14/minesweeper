@@ -6,11 +6,12 @@
 
 struct Cell
 {
-    bool isMine = false;
-    bool isRevealed = false;
-    bool isFlagged = false;
-    bool isHovered = false;
-    int adjacentMines = 0;
+    bool isMine = false; // If the cell contains a mine
+    bool isRevealed = false; // If the cell is revealed
+    bool isFlagged = false; // If the cell is flagged
+    bool isHovered = false; // If the cell is hovered (click or chord to check unrevaled and unflagged adjacent cells)
+    bool isPressed = false; // If the cell is pressed (left click down)
+    int adjacentMines = 0; // The number of mines in a 3x3 area neighboring the cell
 };
 
 class Board
@@ -19,7 +20,7 @@ class Board
         int width;
         int height;
         int minesCount;
-        std::vector<Cell> grid;
+        std::vector<Cell> grid; // The grid representing the board cells
         
         int totalCells;
         int remainingMines;

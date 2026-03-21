@@ -286,6 +286,7 @@ void clickCell(bool isHovered)
     {
         if (GameUI::pressedCellIndex != -1)
         {
+            GameUI::board->grid[GameUI::pressedCellIndex].isPressed = false;
             GameUI::board->grid[GameUI::pressedCellIndex].isHovered = false;
         }
         return;
@@ -301,6 +302,7 @@ void clickCell(bool isHovered)
     {
         if (GameUI::pressedCellIndex != -1)
         {
+            GameUI::board->grid[GameUI::pressedCellIndex].isPressed = false;
             GameUI::board->grid[GameUI::pressedCellIndex].isHovered = false;
         }
         for (int index : GameUI::hoveredCells)
@@ -316,6 +318,7 @@ void clickCell(bool isHovered)
     {
         if (GameUI::pressedCellIndex != -1)
         {
+            GameUI::board->grid[GameUI::pressedCellIndex].isPressed = false;
             GameUI::board->grid[GameUI::pressedCellIndex].isHovered = false;
         }
         for (int index : GameUI::hoveredCells)
@@ -332,6 +335,7 @@ void clickCell(bool isHovered)
     {
         if (GameUI::pressedCellIndex != -1)
         {
+            GameUI::board->grid[GameUI::pressedCellIndex].isPressed = false;
             GameUI::board->grid[GameUI::pressedCellIndex].isHovered = false;
         }
         for (int index : GameUI::hoveredCells)
@@ -341,12 +345,14 @@ void clickCell(bool isHovered)
         GameUI::hoveredCells.clear();
 
         GameUI::pressedCellIndex = cellIndex;
+        cell.isPressed = true;
     }
     
     if (!isHovered)
     {
         if (GameUI::pressedCellIndex != -1)
         {
+            GameUI::board->grid[GameUI::pressedCellIndex].isPressed = false;
             GameUI::board->grid[GameUI::pressedCellIndex].isHovered = false;
         }
         for (int index : GameUI::hoveredCells)
@@ -357,6 +363,7 @@ void clickCell(bool isHovered)
 
         GameUI::pressedCellIndex = -1;
         cell.isHovered = false;
+        cell.isPressed = false;
     }
 
     
@@ -508,6 +515,7 @@ void flagCell()
         }
         else
         {
+            cell.isPressed = false;
             GameUI::board->remainingMines++;
         }
         

@@ -217,6 +217,19 @@ void Draw::drawAllCells()
                 continue;
             }
 
+            // Highlight pressed cell
+            if (cell.isPressed && !cell.isHovered)
+            {
+                SDL_Color pressedHighlightColor = {130, 130, 120, 255};
+                drawSquare(i, j, pressedHighlightColor);
+
+                if (!cell.isHovered)
+                {
+                    drawNumber(i, j);
+                }
+                continue;
+            }
+
             // Reveal normal cell without number (only hover)
             if (cell.isHovered)
             {
