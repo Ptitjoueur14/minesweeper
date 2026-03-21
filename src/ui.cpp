@@ -33,6 +33,8 @@ int GameUI::nbClicks = 0;
 int GameUI::leftClicks = 0;
 int GameUI::rightClicks = 0;
 int GameUI::chordClicks = 0;
+int GameUI::pressedCellIndex = -1;
+std::vector<int> GameUI::hoveredCells;
 
 const char clickCellKey = 'a';
 const char flagCellKey = 'q';
@@ -137,6 +139,7 @@ void create_window()
     }
         
     bool isRunning = true;
+    bool isMouseDown = false;
 
     while (isRunning)
     {
@@ -148,23 +151,38 @@ void create_window()
                 isRunning = false;
             }
 
-            // Open cell with left click or "A"
+            // Open cell with left click or "A" hover
+            if ((GameUI::event.type == SDL_MOUSEBUTTONDOWN && GameUI::event.button.button == SDL_BUTTON_LEFT) ||
+                (GameUI::event.type == SDL_KEYDOWN && GameUI::event.key.keysym.sym == SDLK_a))
+            {
+                isMouseDown = true;
+                clickCell(true);
+            }
+            if (GameUI::event.type == SDL_MOUSEMOTION && isMouseDown)
+            {
+                clickCell(true);
+            }
+            
+            // Open cell with left click or "A" click
             if ((GameUI::event.type == SDL_MOUSEBUTTONUP && GameUI::event.button.button == SDL_BUTTON_LEFT) ||
                 (GameUI::event.type == SDL_KEYUP && GameUI::event.key.keysym.sym == SDLK_a))
             {
-                clickCell();
+                isMouseDown = false;
+                clickCell(false);
             }
             
             // Flag cell with right click or "Q"
             if ((GameUI::event.type == SDL_MOUSEBUTTONDOWN && GameUI::event.button.button == SDL_BUTTON_RIGHT) ||
                 (GameUI::event.type == SDL_KEYDOWN && GameUI::event.key.keysym.sym == SDLK_q))
             {
+                isMouseDown = false;
                 flagCell();
             }
 
             // Reset board
             if (GameUI::event.type == SDL_KEYDOWN && GameUI::event.key.keysym.sym == SDLK_SPACE)
             {
+                isMouseDown = false;
                 resetBoard();
             }
         }
@@ -220,7 +238,7 @@ void updateCellSize()
     }
 }
 
-void clickCell()
+void clickCell(bool isHovered)
 {
     if (GameUI::isGameFinished)
     {
@@ -229,23 +247,29 @@ void clickCell()
     
     int x = 0;
     int y = 0;
-    if (GameUI::event.type == SDL_MOUSEBUTTONUP)
+    SDL_GetMouseState(&x, &y);
+    
+    if (GameUI::event.type == SDL_MOUSEBUTTONUP || GameUI::event.type == SDL_MOUSEBUTTONDOWN)
     {
-        x = GameUI::event.button.x;
-        y = GameUI::event.button.y;
+        //x = GameUI::event.button.x;
+       // y = GameUI::event.button.y;
     }
-    else if (GameUI::event.type == SDL_KEYUP)
+    else if (GameUI::event.type == SDL_KEYUP || GameUI::event.type == SDL_KEYDOWN)
     {
-        SDL_GetMouseState(&x, &y);
+        //SDL_GetMouseState(&x, &y);
     }
     else
     {
-        return;
+        //return;
     }
 
     if (x < 50 || x >= 50 + GameUI::cellSize * GameUI::board->width
         || y < 50 || y >= 50 + GameUI::cellSize * GameUI::board->height)
     {
+        if (GameUI::pressedCellIndex != -1)
+        {
+            GameUI::board->grid[GameUI::pressedCellIndex].isHovered = false;
+        }
         return;
     }
     
@@ -257,18 +281,70 @@ void clickCell()
 
     if (!GameUI::board->isInBounds(cellX, cellY))
     {
+        if (GameUI::pressedCellIndex != -1)
+        {
+            GameUI::board->grid[GameUI::pressedCellIndex].isHovered = false;
+        }
+        for (int index : GameUI::hoveredCells)
+        {
+            GameUI::board->grid[index].isHovered = false;
+        }
+        GameUI::hoveredCells.clear();
         return;
     }
     
     Cell &cell = GameUI::board->getCell(cellX, cellY);
     if (cell.isFlagged)
     {
+        if (GameUI::pressedCellIndex != -1)
+        {
+            GameUI::board->grid[GameUI::pressedCellIndex].isHovered = false;
+        }
+        for (int index : GameUI::hoveredCells)
+        {
+            GameUI::board->grid[index].isHovered = false;
+        }
+        GameUI::hoveredCells.clear();
+
         return;
     }
+
+    int cellIndex = cellY * GameUI::board->width + cellX;
+    if (isHovered)
+    {
+        if (GameUI::pressedCellIndex != -1)
+        {
+            GameUI::board->grid[GameUI::pressedCellIndex].isHovered = false;
+        }
+        for (int index : GameUI::hoveredCells)
+        {
+            GameUI::board->grid[index].isHovered = false;
+        }
+        GameUI::hoveredCells.clear();
+
+        GameUI::pressedCellIndex = cellIndex;
+    }
+    
+    if (!isHovered)
+    {
+        if (GameUI::pressedCellIndex != -1)
+        {
+            GameUI::board->grid[GameUI::pressedCellIndex].isHovered = false;
+        }
+        for (int index : GameUI::hoveredCells)
+        {
+            GameUI::board->grid[index].isHovered = false;
+        }
+        GameUI::hoveredCells.clear();
+
+        GameUI::pressedCellIndex = -1;
+        cell.isHovered = false;
+    }
+
     
     // std::cout << "Clicked on cell " << cellX << "; " << cellY << std::endl;
-
-    if (GameUI::nbClicks == 0)
+    
+    if (GameUI::nbClicks == 0 && !isHovered)
     {
         GameUI::board->placeAllMines(cellX, cellY);
         GameUI::board->updateAllCellAdjacencies();
@@ -277,7 +353,7 @@ void clickCell()
     }
 
     // Clicked on a mine: Lose game
-    if (cell.isMine)
+    if (cell.isMine && !isHovered)
     {
         GameUI::nbClicks++;
         GameUI::leftClicks++;
@@ -289,17 +365,23 @@ void clickCell()
     // Clicked on an already revealed cell : Chord cell
     if (cell.isRevealed)
     {
-        chordCell(cellX, cellY);
+        chordCell(cellX, cellY, isHovered);
+        return;
+    }
+
+    if (isHovered)
+    {
+        revealCell(cellX, cellY, true);
         return;
     }
 
     GameUI::nbClicks++;
     GameUI::leftClicks++;
-    revealCell(cellX, cellY);
+    revealCell(cellX, cellY, false);
     checkForGameFinish();
 }
 
-void revealCell(int cellX, int cellY)
+void revealCell(int cellX, int cellY, bool isHovered)
 {
     if (!GameUI::board->isInBounds(cellX, cellY))
     {
@@ -307,11 +389,19 @@ void revealCell(int cellX, int cellY)
     }
     
     Cell &cell = GameUI::board->getCell(cellX, cellY);
-    if (cell.isRevealed || cell.isMine || cell.isFlagged)
+    if (cell.isRevealed || cell.isMine && !isHovered || cell.isFlagged)
     {
         return;
     }
-    
+
+    if (isHovered)
+    {
+        cell.isHovered = true;
+        GameUI::hoveredCells.push_back(cellY * GameUI::board->width + cellX);
+        return;
+    }
+
+    cell.isHovered = false;
     cell.isRevealed = true;
 
     // Stop on numbered cells
@@ -332,7 +422,7 @@ void revealCell(int cellX, int cellY)
 
             if (GameUI::board->isInBounds(dx, dy))
             {
-                revealCell(dx, dy);
+                revealCell(dx, dy, false);
             }
         }
     }
@@ -407,16 +497,25 @@ void flagCell()
     }
 }
 
-void chordCell(int cellX, int cellY)
+void chordCell(int cellX, int cellY, bool isHovered)
 {
     Cell &chordCell = GameUI::board->getCell(cellX, cellY);
     if (!chordCell.isRevealed || chordCell.adjacentMines == 0)
     {
+        for (int index : GameUI::hoveredCells)
+        {
+            GameUI::board->grid[index].isHovered = false;
+        }
+        GameUI::hoveredCells.clear();
+
         return;
     }
 
-    GameUI::nbClicks++;
-    GameUI::chordClicks++;
+    if (!isHovered)
+    {
+        GameUI::nbClicks++;
+        GameUI::chordClicks++;
+    }
     
     int totalFlaggedCellsCont = 0;
     
@@ -461,16 +560,27 @@ void chordCell(int cellX, int cellY)
                     continue;
                 }
 
+                if (isHovered)
+                {
+                    cell.isHovered = true;
+                    GameUI::hoveredCells.push_back(dy * GameUI::board->width + dx);
+                    continue;
+                }
+                else
+                {
+                    cell.isHovered = false;
+                }
+
                 // Misplaced flag -> Explode cell and lose the game
-                if (cell.isMine)
+                if (cell.isMine && !isHovered)
                 {
                     cell.isRevealed = true;
                     finishGame(false);
                     continue;
                 }
 
-                // Reveal all other unflagged and unrevealed cells
-                revealCell(dx, dy);
+                // Reveal unflagged and unrevealed cell
+                revealCell(dx, dy, false);
             }
         }
     }
@@ -566,6 +676,8 @@ void resetBoard()
     GameUI::leftClicks = 0;
     GameUI::rightClicks = 0;
     GameUI::chordClicks = 0;
+    GameUI::pressedCellIndex = -1;
+    GameUI::hoveredCells.clear();
     
     Timer::resetTimer();
     Draw::drawGameInfo();

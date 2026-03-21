@@ -184,7 +184,7 @@ void Draw::drawAllCells()
                 // Unrevealed mine at game win (place flag)
                 if (GameUI::isGameWon && cell.isMine && !cell.isRevealed)
                 {
-                    SDL_Color hiddenColor = {120, 120, 120, 255};
+                    SDL_Color hiddenColor = {180, 180, 180, 255};
                     drawSquare(i, j, hiddenColor);
                     drawTextureInCell(i, j, GameUI::flagTexture);
                     continue;
@@ -193,7 +193,7 @@ void Draw::drawAllCells()
                 // Unplaced mine at game loss (place mine)
                 if (!GameUI::isGameWon && cell.isMine && !cell.isRevealed && !cell.isFlagged)
                 {
-                    SDL_Color hiddenColor = {120, 120, 120, 255};
+                    SDL_Color hiddenColor = {180, 180, 180, 255};
                     drawSquare(i, j, hiddenColor);
                     drawTextureInCell(i, j, GameUI::mineTexture);
                     continue;
@@ -201,9 +201,9 @@ void Draw::drawAllCells()
             }
             
             // Hidden cell
-            if (!cell.isRevealed && !cell.isFlagged)
+            if (!cell.isRevealed && !cell.isFlagged && !cell.isHovered)
             {
-                SDL_Color hiddenColor = {120, 120, 120, 255};
+                SDL_Color hiddenColor = {180, 180, 180, 255};
                 drawSquare(i, j, hiddenColor);
                 continue;
             }
@@ -211,14 +211,22 @@ void Draw::drawAllCells()
             // Flag
             if (cell.isFlagged)
             {
-                SDL_Color hiddenColor = {120, 120, 120, 255};
+                SDL_Color hiddenColor = {180, 180, 180, 255};
                 drawSquare(i, j, hiddenColor);
                 drawTextureInCell(i, j, GameUI::flagTexture);
                 continue;
             }
 
+            // Reveal normal cell without number (only hover)
+            if (cell.isHovered)
+            {
+                SDL_Color revealedColor = {120, 120, 120, 255};
+                drawSquare(i, j, revealedColor);
+                continue;
+            }
+
             // Reveal normal cell with number
-            SDL_Color revealedColor = {180, 180, 180, 255};
+            SDL_Color revealedColor = {120, 120, 120, 255};
             drawSquare(i, j, revealedColor);
             drawNumber(i, j);
         }

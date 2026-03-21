@@ -9,6 +9,7 @@ struct Cell
     bool isMine = false;
     bool isRevealed = false;
     bool isFlagged = false;
+    bool isHovered = false;
     int adjacentMines = 0;
 };
 
