@@ -37,6 +37,11 @@ int GameUI::chordClicks = 0;
 const char clickCellKey = 'a';
 const char flagCellKey = 'q';
 
+#define COLOR_RESET "\033[0m"
+#define COLOR_RED "\033[31m"
+#define COLOR_GREEN "\033[32m"
+#define COLOR_YELLOW "\033[33m"
+
 #define WINDOW_WIDTH 1850
 #define WINDOW_HEIGHT 1020
 
@@ -270,16 +275,18 @@ void clickCell()
         GameUI::board->printBoard();
         Timer::startTimer();
     }
-    
+
+    // Clicked on a mine: Lose game
     if (cell.isMine)
     {
         GameUI::nbClicks++;
         GameUI::leftClicks++;
-        std::cout << "You clicked on a mine and lost !" << std::endl;
         cell.isRevealed = true;
         finishGame(false);
         return;
     }
+
+    // Clicked on an already revealed cell : Chord cell
     if (cell.isRevealed)
     {
         chordCell(cellX, cellY);
@@ -510,10 +517,14 @@ void finishGame(bool isWon)
     if (isWon)
     {
         GameUI::board->remainingMines = 0;
+        std::cout << COLOR_GREEN << "Finished board in ";
+    }
+    else
+    {
+        std::cout << COLOR_RED << "Failed board in ";
     }
 
-    std::cout << "Finished game in " << Timer::finalTimeSeconds << "."
-        << Timer::finalTimeMilliseconds << " sec" << std::endl;
+    std::cout << Timer::finalTimeSeconds << "." << Timer::finalTimeMilliseconds << " sec" << std::endl << COLOR_RESET;
 
     if (isWon)
     {

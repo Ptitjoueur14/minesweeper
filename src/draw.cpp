@@ -254,7 +254,7 @@ void Draw::drawGameStatistics()
 {
     SDL_Rect statsRect;
     statsRect.x = 0;
-    statsRect.y = 10;
+    statsRect.y = 0;
     statsRect.w = 400;
     statsRect.h = 30;
 
