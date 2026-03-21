@@ -191,6 +191,12 @@ void create_window()
                 canFlag = true;
             }
 
+            // Solve 3x3 area with "S"
+            if (GameUI::event.type == SDL_KEYDOWN && GameUI::event.key.keysym.sym == SDLK_s)
+            {
+                solve3x3Area();
+            }
+
             // Reset board
             if (GameUI::event.type == SDL_KEYDOWN && GameUI::event.key.keysym.sym == SDLK_SPACE)
             {
@@ -693,4 +699,55 @@ void resetBoard()
     
     Timer::resetTimer();
     Draw::drawGameInfo();
+}
+
+void solve3x3Area()
+{
+    if (GameUI::isGameFinished || GameUI::nbClicks == 0)
+    {
+        return;
+    }
+
+    int x = 0;
+    int y = 0;
+    SDL_GetMouseState(&x, &y);
+
+    if (x < 50 || x >= 50 + GameUI::cellSize * GameUI::board->width || y < 50 || y >= 50 + GameUI::cellSize * GameUI::board->height)
+    {
+        return;
+    }
+
+    int mouseX = x - 50;
+    int mouseY = y - 50;
+
+    int cellX = mouseX / GameUI::cellSize;
+    int cellY = mouseY / GameUI::cellSize;
+
+    for (int dy = cellY - 1; dy <= cellY + 1; dy++)
+    {
+        for (int dx = cellX - 1; dx <= cellX + 1; dx++)
+        {
+            if (!GameUI::board->isInBounds(dx, dy))
+            {
+                continue;
+            }
+
+            Cell &cell = GameUI::board->getCell(dx, dy);
+            if (cell.isRevealed || cell.isFlagged)
+            {
+                continue;
+            }
+
+            if (cell.isMine)
+            {
+                cell.isFlagged = true;
+            }
+            else
+            {
+                cell.isRevealed = true;
+            }
+        }
+    }
+
+    checkForGameFinish();
 }

@@ -62,4 +62,6 @@ void finishGame(bool isWon);
 
 void resetBoard();
 
+void solve3x3Area();
+
 #endif
