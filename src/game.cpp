@@ -1,5 +1,4 @@
 #include "../include/board.hpp"
-#include <cstdlib>
 #include <iostream>
 #include <string>
 #include "../include/ui.hpp"

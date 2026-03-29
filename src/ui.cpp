@@ -12,7 +12,6 @@
 
 #include <iostream>
 #include <string>
-#include <chrono>
 
 #include "../include/ui.hpp"
 #include "../include/draw.hpp"
