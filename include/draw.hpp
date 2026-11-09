@@ -7,6 +7,22 @@
 class Draw
 {
     public:
+
+        SDL_Texture *numberTextures[8] = {};
+        SDL_Color number_colors[8] = {
+            {0, 0, 255, 255},
+            {0, 255, 0, 255},
+            {255, 0, 0, 255},
+            {255, 0, 255, 255},
+            {245, 159, 22, 255},
+            {22, 230, 245, 255},
+            {200, 200, 200, 255},
+            {150, 150, 150, 255}
+        };
+
+        static void initializeNumberTextures();
+        static void destroyNumberTextures();
+        
         // Called at the start of the game to draw borders
         static void drawStaticUI();
 

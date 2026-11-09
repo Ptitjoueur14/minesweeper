@@ -31,6 +31,7 @@ class GameUI
         static int rightClicks;
         static int chordClicks;
 
+        static int hoveredCellIndex;
         static int pressedCellIndex;
         static std::vector<int> hoveredCells;
 
@@ -53,6 +54,7 @@ void drawText(const std::string &text, SDL_Rect textRect, SDL_Color color);
 void drawTextInCell(const std::string &text, SDL_Rect cellRect, SDL_Color color);
 void drawTextureInCell(int cellX, int cellY, SDL_Texture *texture);
 
+bool hoverCell();
 void clickCell(bool isHovered);
 void revealCell(int cellX, int cellY, bool isHovered);
 

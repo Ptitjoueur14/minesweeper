@@ -1,6 +1,7 @@
 #include <SDL2/SDL_error.h>
 #include <SDL2/SDL_render.h>
 #include <iostream>
+#include <string>
 #include "../include/ui.hpp"
 #include "../include/draw.hpp"
 #include "../include/timer.hpp"
@@ -9,6 +10,14 @@
 #define WINDOW_HEIGHT 1020
 
 #define GAME_INFO_OFFSET 300
+
+void Draw::initializeNumberTextures()
+{
+    for (int i = 0; i < 8; i++)
+    {
+        std::string number_text = std::to_string(i);
+    }
+}
 
 // Called at the start of the game to draw borders
 void Draw::drawStaticUI()
@@ -211,19 +220,26 @@ void Draw::drawAllCells()
             // Flag
             if (cell.isFlagged)
             {
-                SDL_Color hiddenColor = {150, 150, 150, 255};
-                drawSquare(i, j, hiddenColor);
+                if (cell.isHovered)
+                {
+                    SDL_Color hover_color = {130, 130, 90, 255};
+                    drawSquare(i, j, hover_color);
+                }
+                else
+                {
+                    SDL_Color hiddenColor = {150, 150, 150, 255};
+                    drawSquare(i, j, hiddenColor);
+                }
                 drawTextureInCell(i, j, GameUI::flagTexture);
                 continue;
             }
 
             // Highlight pressed cell
-            if (cell.isPressed && !cell.isHovered)
+            if (cell.isPressed)
             {
-                SDL_Color pressedHighlightColor = {130, 130, 120, 255};
+                SDL_Color pressedHighlightColor = {130, 130, 50, 255};
                 drawSquare(i, j, pressedHighlightColor);
-
-                if (!cell.isHovered)
+                if (cell.isRevealed)
                 {
                     drawNumber(i, j);
                 }
@@ -233,8 +249,12 @@ void Draw::drawAllCells()
             // Reveal normal cell without number (only hover)
             if (cell.isHovered)
             {
-                SDL_Color revealedColor = {120, 120, 120, 255};
+                SDL_Color revealedColor = {130, 130, 90, 255};
                 drawSquare(i, j, revealedColor);
+                if (cell.isRevealed)
+                {
+                    drawNumber(i, j);
+                }
                 continue;
             }
 
