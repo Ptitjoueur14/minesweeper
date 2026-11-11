@@ -1,0 +1,57 @@
+{
+  inputs = {
+    nixpkgs.url = "https://channels.nixos.org/nixos-unstable/nixexprs.tar.xz";
+  };
+
+  outputs =
+    { self, nixpkgs }:
+    let
+      inherit (nixpkgs.lib) genAttrs;
+
+      forAllSystems = genAttrs [
+        "x86_64-linux"
+        "aarch64-linux"
+        "aarch64-darwin"
+      ];
+      forAllPkgs = function: forAllSystems (system: function pkgs.${system});
+
+      pkgs = forAllSystems (
+        system:
+        import nixpkgs {
+          inherit system;
+          overlays = [ ];
+        }
+      );
+    in
+    {
+      formatter = forAllPkgs (pkgs: pkgs.nixfmt-tree);
+
+      devShells = forAllPkgs (
+        pkgs:
+        let
+          mkClangShell = pkgs.mkShell.override { stdenv = pkgs.clangStdenv; };
+        in
+        {
+          default = mkClangShell {
+            packages =
+              with pkgs;
+              [
+                bear
+
+                pkg-config
+                sdl3
+                SDL2
+                SDL2_image
+                SDL2_ttf
+              ]
+              ++ (with llvmPackages; [
+                clang
+                clang-tools
+                libllvm
+                lldb
+              ]);
+          };
+        }
+      );
+    };
+}
