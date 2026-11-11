@@ -45,10 +45,15 @@ const char flagCellKey = 'q';
 #define COLOR_GREEN "\033[32m"
 #define COLOR_YELLOW "\033[33m"
 
-#define WINDOW_WIDTH 1850
-#define WINDOW_HEIGHT 1020
+#define WINDOW_WIDTH 1920
+#define WINDOW_HEIGHT 1080
 
 #define GAME_INFO_OFFSET 300
+
+#define MINESWEEPER_FONT_PATH "assets/fonts/minesweeper-font/minesweeper.otf"
+#define OPEN_SANS_FONT_PATH "assets/fonts/open-sans-font/open-sans.ttf"
+#define FLAG_TEXTURE_PATH "assets/textures/flag.png"
+#define MINE_TEXTURE_PATH "assets/textures/mine.png"
 
 void create_window()
 {
@@ -82,12 +87,12 @@ void create_window()
 
     int posX = usableBounds.x + usableBounds.w - WINDOW_WIDTH;
     int posY = usableBounds.y;
-    GameUI::window = SDL_CreateWindow("Minesweeper", posX, posY, WINDOW_WIDTH, WINDOW_HEIGHT, 0);
+    GameUI::window = SDL_CreateWindow("Minesweeper", posX, posY, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_FULLSCREEN);
     GameUI::renderer = SDL_CreateRenderer(GameUI::window, -1, SDL_RENDERER_ACCELERATED);
 
     updateCellSize();
     int fontSize = GameUI::cellSize / 2;
-    GameUI::cellFont = TTF_OpenFont("assets/fonts/minesweeper-font/minesweeper.otf", fontSize);
+    GameUI::cellFont = TTF_OpenFont(MINESWEEPER_FONT_PATH, fontSize);
     if (!GameUI::cellFont)
     {
         std::cerr << "Failed to load font: " << TTF_GetError() << std::endl;
@@ -99,7 +104,7 @@ void create_window()
         return;
     }
 
-    GameUI::UIFont = TTF_OpenFont("assets/fonts/open-sans-font/open-sans.ttf", 25);
+    GameUI::UIFont = TTF_OpenFont(OPEN_SANS_FONT_PATH, 25);
     if (!GameUI::UIFont)
     {
         std::cerr << "Failed to load font: " << TTF_GetError() << std::endl;
@@ -112,7 +117,7 @@ void create_window()
         return;
     }
 
-    GameUI::flagTexture = IMG_LoadTexture(GameUI::renderer, "assets/flag.png");
+    GameUI::flagTexture = IMG_LoadTexture(GameUI::renderer, FLAG_TEXTURE_PATH);
     if (!GameUI::flagTexture)
     {
         std::cout << "Failed to load flag texture: " << IMG_GetError() << std::endl;
@@ -125,7 +130,7 @@ void create_window()
         SDL_Quit();
         return;
     }
-    GameUI::mineTexture = IMG_LoadTexture(GameUI::renderer, "assets/mine.png");
+    GameUI::mineTexture = IMG_LoadTexture(GameUI::renderer, MINE_TEXTURE_PATH);
     if (!GameUI::mineTexture)
     {
         std::cout << "Failed to load mine texture: " << IMG_GetError() << std::endl;
@@ -231,7 +236,6 @@ void create_window()
         {
             //std::cout << "Elapsed time: " << GameUI::elapsedSeconds << std::endl;
             Draw::renderFrame();
-            SDL_RenderPresent(GameUI::renderer);
         }
         
         SDL_Delay(16); // 60 FPS
@@ -284,35 +288,42 @@ bool hoverCell()
         return false;
     }
 
-    int x = 0;
-    int y = 0;
-    SDL_GetMouseState(&x, &y);
+    if (GameUI::event.type != SDL_MOUSEMOTION)
+    {
+        return false;
+    }
+
+    int x = GameUI::event.motion.x;
+    int y = GameUI::event.motion.y;
 
     if (GameUI::hoveredCellIndex != -1)
     {
         GameUI::board->grid[GameUI::hoveredCellIndex].isHovered = false;
     }
-
-    if (x < 50 || x >= 50 + GameUI::cellSize * GameUI::board->width
-        || y < 50 || y >= 50 + GameUI::cellSize * GameUI::board->height)
-    {
-        return false;
-    }
     
+    int previousHoveredCellIndex = GameUI::hoveredCellIndex;
+
+    if (x < 50 || x >= 50 + (GameUI::board->width * GameUI::cellSize) || y < 50 || y >= 50 + (GameUI::board->height * GameUI::cellSize))
+    {
+        GameUI::hoveredCellIndex = -1;
+        return previousHoveredCellIndex != -1;
+    }
+
     int mouseX = x - 50;
     int mouseY = y - 50;
-    
-    int cellX = mouseX / GameUI::cellSize;
-    int cellY = mouseY / GameUI::cellSize;
 
+    int cellX = mouseX / GameUI::cellSize;
+    int cellY = mouseY / GameUI::cellSize;  
+
+    
     if (!GameUI::board->isInBounds(cellX, cellY))
     {
-        return false;
+        GameUI::hoveredCellIndex = -1;
+        return previousHoveredCellIndex != -1;
     }
     
     Cell &cell = GameUI::board->getCell(cellX, cellY);
     cell.isHovered = true;
-    int previousHoveredCellIndex = GameUI::hoveredCellIndex;
     GameUI::hoveredCellIndex = cellY * GameUI::board->width + cellX;
     return previousHoveredCellIndex != GameUI::hoveredCellIndex;
 }
@@ -326,20 +337,15 @@ void clickCell(bool isHovered)
     
     int x = 0;
     int y = 0;
-    SDL_GetMouseState(&x, &y);
     
     if (GameUI::event.type == SDL_MOUSEBUTTONUP || GameUI::event.type == SDL_MOUSEBUTTONDOWN)
     {
-        //x = GameUI::event.button.x;
-       // y = GameUI::event.button.y;
-    }
-    else if (GameUI::event.type == SDL_KEYUP || GameUI::event.type == SDL_KEYDOWN)
-    {
-        //SDL_GetMouseState(&x, &y);
+        x = GameUI::event.button.x;
+        y = GameUI::event.button.y;
     }
     else
     {
-        //return;
+        SDL_GetMouseState(&x, &y);
     }
 
     if (x < 50 || x >= 50 + GameUI::cellSize * GameUI::board->width
@@ -759,6 +765,7 @@ void resetBoard()
     GameUI::rightClicks = 0;
     GameUI::chordClicks = 0;
     GameUI::pressedCellIndex = -1;
+    GameUI::hoveredCellIndex = -1;
     GameUI::hoveredCells.clear();
     GameUI::framesRendered = 0;
     

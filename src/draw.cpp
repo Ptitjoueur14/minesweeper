@@ -6,8 +6,8 @@
 #include "../include/draw.hpp"
 #include "../include/timer.hpp"
 
-#define WINDOW_WIDTH 1850
-#define WINDOW_HEIGHT 1020
+#define WINDOW_WIDTH 1920
+#define WINDOW_HEIGHT 1080
 
 #define GAME_INFO_OFFSET 300
 
@@ -29,11 +29,6 @@ void Draw::drawStaticUI()
         std::cerr << "Draw: DrawStaticUI: SDL_SetRenderDrawColor failed: " << SDL_GetError() << std::endl;
     }
     
-    if (SDL_RenderClear(GameUI::renderer) < 0)
-    {
-        std::cerr << "Draw: DrawStaticUI: SDL_RenderClear failed: " << SDL_GetError() << std::endl;
-    }
-
     if (SDL_SetRenderDrawColor(GameUI::renderer, 255, 255, 255, 255) < 0)
     {
         std::cerr << "Draw: DrawStaticUI: SDL_SetRenderDrawColor failed: " << SDL_GetError() << std::endl;
