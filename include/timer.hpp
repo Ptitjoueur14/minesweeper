@@ -1,30 +1,34 @@
 #ifndef TIMER_HPP
 #define TIMER_HPP
 
-#include <iostream>
 #include <chrono>
+#include <iostream>
 
 class Timer
 {
-    public:
-        static bool isTimerActive;
-        static std::chrono::steady_clock::time_point gameStartTime;
-        static std::chrono::steady_clock::time_point gameEndTime;
-        static int elapsedSeconds;
+public:
+    static bool isTimerActive;
+    static std::chrono::steady_clock::time_point gameStartTime;
+    static std::chrono::steady_clock::time_point gameEndTime;
+    static int elapsedSeconds;
 
-        // Timer in seconds and milliseconds
-        static int finalTimeSeconds;
-        static int finalTimeMilliseconds;
+    // Timer in seconds and milliseconds
+    static int finalTimeSeconds;
+    static int finalTimeMilliseconds;
 
-        static void startTimer();
-        static std::chrono::steady_clock::time_point getTimeNow();
-        static bool updateTimer();
-        static void endTimer();
+    static void startTimer();
+    static std::chrono::steady_clock::time_point getTimeNow();
+    static bool updateTimer();
+    static void endTimer();
 
-        static int getElapsedTimeSeconds(std::chrono::steady_clock::time_point startTime, std::chrono::steady_clock::time_point endTime);
-        static int getElapsedTimeMilliseconds(std::chrono::steady_clock::time_point startTime, std::chrono::steady_clock::time_point endTime);
+    static int
+    getElapsedTimeSeconds(std::chrono::steady_clock::time_point startTime,
+                          std::chrono::steady_clock::time_point endTime);
+    static int
+    getElapsedTimeMilliseconds(std::chrono::steady_clock::time_point startTime,
+                               std::chrono::steady_clock::time_point endTime);
 
-        static void resetTimer();
+    static void resetTimer();
 };
 
 #endif

@@ -1,6 +1,7 @@
-#include "../include/board.hpp"
 #include <iostream>
 #include <string>
+
+#include "../include/board.hpp"
 #include "../include/ui.hpp"
 
 void printGameUsage()
@@ -11,7 +12,7 @@ void printGameUsage()
     std::cout << "Usage: ./game <width> <height> <mines>" << std::endl;
 }
 
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
     if (argc == 3)
     {
@@ -62,18 +63,19 @@ int main(int argc, char** argv)
         height = std::stoi(argv[2]);
         mines = std::stoi(argv[3]);
     }
-    
+
     if (mines > width * height)
     {
         std::cout << "Board is not big enough to place all the mines ! Got << "
-            << mines << " mines but only " << width * height << " total cells" << std::endl;
+                  << mines << " mines but only " << width * height
+                  << " total cells" << std::endl;
         return 1;
     }
-    
+
     Board *board = new Board(width, height, mines);
     GameUI::board = board;
 
     create_window();
-    
+
     return 0;
 }

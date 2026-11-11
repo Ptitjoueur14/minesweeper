@@ -12,30 +12,30 @@
 
 class GameUI
 {
-    public:
-        static TTF_Font *cellFont;
-        static TTF_Font *UIFont;
-        static SDL_Event event;
-        static SDL_Window *window;
-        static SDL_Renderer *renderer;
-        static Board *board;
-        static int cellSize;
-        static bool isGameFinished;
-        static bool isGameWon;
+public:
+    static TTF_Font *cellFont;
+    static TTF_Font *UIFont;
+    static SDL_Event event;
+    static SDL_Window *window;
+    static SDL_Renderer *renderer;
+    static Board *board;
+    static int cellSize;
+    static bool isGameFinished;
+    static bool isGameWon;
 
-        static SDL_Texture *flagTexture;
-        static SDL_Texture *mineTexture;
+    static SDL_Texture *flagTexture;
+    static SDL_Texture *mineTexture;
 
-        static int nbClicks;
-        static int leftClicks;
-        static int rightClicks;
-        static int chordClicks;
+    static int nbClicks;
+    static int leftClicks;
+    static int rightClicks;
+    static int chordClicks;
 
-        static int hoveredCellIndex;
-        static int pressedCellIndex;
-        static std::vector<int> hoveredCells;
+    static int hoveredCellIndex;
+    static int pressedCellIndex;
+    static std::vector<int> hoveredCells;
 
-        static int framesRendered;
+    static int framesRendered;
 };
 
 void create_window();
@@ -51,7 +51,8 @@ void drawNumber(int cellX, int cellY);
 void drawAllCells();
 void drawGameStatistics();
 void drawText(const std::string &text, SDL_Rect textRect, SDL_Color color);
-void drawTextInCell(const std::string &text, SDL_Rect cellRect, SDL_Color color);
+void drawTextInCell(const std::string &text, SDL_Rect cellRect,
+                    SDL_Color color);
 void drawTextureInCell(int cellX, int cellY, SDL_Texture *texture);
 
 bool hoverCell();

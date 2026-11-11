@@ -1,19 +1,19 @@
+#include "../include/ui.hpp"
+
+#include <SDL2/SDL.h>
 #include <SDL2/SDL_error.h>
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_hidapi.h>
+#include <SDL2/SDL_image.h>
 #include <SDL2/SDL_keycode.h>
 #include <SDL2/SDL_mouse.h>
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_surface.h>
-#include <SDL2/SDL_video.h>
-#include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
-#include <SDL2/SDL_image.h>
-
+#include <SDL2/SDL_video.h>
 #include <iostream>
 #include <string>
 
-#include "../include/ui.hpp"
 #include "../include/draw.hpp"
 #include "../include/timer.hpp"
 
@@ -78,7 +78,8 @@ void create_window()
     SDL_Rect usableBounds;
     if (SDL_GetDisplayUsableBounds(0, &usableBounds) < 0)
     {
-        std::cerr << "SDL_GetDisplayUsableBounds failed: " << SDL_GetError() << std::endl;
+        std::cerr << "SDL_GetDisplayUsableBounds failed: " << SDL_GetError()
+                  << std::endl;
         usableBounds.x = 0;
         usableBounds.y = 0;
         usableBounds.w = 1920;
@@ -87,8 +88,10 @@ void create_window()
 
     int posX = usableBounds.x + usableBounds.w - WINDOW_WIDTH;
     int posY = usableBounds.y;
-    GameUI::window = SDL_CreateWindow("Minesweeper", posX, posY, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_FULLSCREEN);
-    GameUI::renderer = SDL_CreateRenderer(GameUI::window, -1, SDL_RENDERER_ACCELERATED);
+    GameUI::window = SDL_CreateWindow("Minesweeper", posX, posY, WINDOW_WIDTH,
+                                      WINDOW_HEIGHT, SDL_WINDOW_FULLSCREEN);
+    GameUI::renderer =
+        SDL_CreateRenderer(GameUI::window, -1, SDL_RENDERER_ACCELERATED);
 
     updateCellSize();
     int fontSize = GameUI::cellSize / 2;
@@ -120,7 +123,8 @@ void create_window()
     GameUI::flagTexture = IMG_LoadTexture(GameUI::renderer, FLAG_TEXTURE_PATH);
     if (!GameUI::flagTexture)
     {
-        std::cout << "Failed to load flag texture: " << IMG_GetError() << std::endl;
+        std::cout << "Failed to load flag texture: " << IMG_GetError()
+                  << std::endl;
         TTF_CloseFont(GameUI::cellFont);
         TTF_CloseFont(GameUI::UIFont);
         SDL_DestroyRenderer(GameUI::renderer);
@@ -133,7 +137,8 @@ void create_window()
     GameUI::mineTexture = IMG_LoadTexture(GameUI::renderer, MINE_TEXTURE_PATH);
     if (!GameUI::mineTexture)
     {
-        std::cout << "Failed to load mine texture: " << IMG_GetError() << std::endl;
+        std::cout << "Failed to load mine texture: " << IMG_GetError()
+                  << std::endl;
         TTF_CloseFont(GameUI::cellFont);
         TTF_CloseFont(GameUI::UIFont);
         SDL_DestroyRenderer(GameUI::renderer);
@@ -143,7 +148,7 @@ void create_window()
         SDL_Quit();
         return;
     }
-        
+
     bool isRunning = true;
     bool isMouseDown = false;
     bool canFlag = true;
@@ -161,47 +166,57 @@ void create_window()
                 break;
             }
 
-            if (GameUI::event.type == SDL_KEYDOWN && GameUI::event.key.keysym.sym == SDLK_ESCAPE)
+            if (GameUI::event.type == SDL_KEYDOWN
+                && GameUI::event.key.keysym.sym == SDLK_ESCAPE)
             {
                 isRunning = false;
                 break;
             }
 
             // Open cell with left click or "A" hover
-            if ((GameUI::event.type == SDL_MOUSEBUTTONDOWN && GameUI::event.button.button == SDL_BUTTON_LEFT) ||
-                (GameUI::event.type == SDL_KEYDOWN && GameUI::event.key.keysym.sym == SDLK_a))
+            if (!isMouseDown
+                && ((GameUI::event.type == SDL_MOUSEBUTTONDOWN
+                     && GameUI::event.button.button == SDL_BUTTON_LEFT)
+                    || (GameUI::event.type == SDL_KEYDOWN
+                        && GameUI::event.key.keysym.sym == SDLK_a)))
             {
                 isMouseDown = true;
                 clickCell(true);
                 Draw::renderFrame();
             }
-            
+
             // Open cell with left click or "A" click
-            if ((GameUI::event.type == SDL_MOUSEBUTTONUP && GameUI::event.button.button == SDL_BUTTON_LEFT) ||
-                (GameUI::event.type == SDL_KEYUP && GameUI::event.key.keysym.sym == SDLK_a))
+            if ((GameUI::event.type == SDL_MOUSEBUTTONUP
+                 && GameUI::event.button.button == SDL_BUTTON_LEFT)
+                || (GameUI::event.type == SDL_KEYUP
+                    && GameUI::event.key.keysym.sym == SDLK_a))
             {
                 isMouseDown = false;
                 clickCell(false);
                 Draw::renderFrame();
             }
-            
+
             // Flag cell with right click or "Q"
-            if (canFlag && GameUI::event.type == SDL_MOUSEBUTTONDOWN && GameUI::event.button.button == SDL_BUTTON_RIGHT)
+            if (canFlag && GameUI::event.type == SDL_MOUSEBUTTONDOWN
+                && GameUI::event.button.button == SDL_BUTTON_RIGHT)
             {
                 isMouseDown = false;
                 canFlag = false;
                 flagCell();
                 Draw::renderFrame();
             }
-            if (GameUI::event.type == SDL_KEYDOWN && GameUI::event.key.keysym.sym == SDLK_q)
+            if (GameUI::event.type == SDL_KEYDOWN
+                && GameUI::event.key.keysym.sym == SDLK_q)
             {
                 isMouseDown = false;
                 flagCell();
                 Draw::renderFrame();
             }
 
-            if ((GameUI::event.type == SDL_MOUSEBUTTONUP && GameUI::event.button.button == SDL_BUTTON_RIGHT) ||
-                (GameUI::event.type == SDL_KEYUP && GameUI::event.key.keysym.sym == SDLK_q))
+            if ((GameUI::event.type == SDL_MOUSEBUTTONUP
+                 && GameUI::event.button.button == SDL_BUTTON_RIGHT)
+                || (GameUI::event.type == SDL_KEYUP
+                    && GameUI::event.key.keysym.sym == SDLK_q))
             {
                 canFlag = true;
             }
@@ -216,28 +231,30 @@ void create_window()
             }
 
             // Solve 3x3 area with "S"
-            if (GameUI::event.type == SDL_KEYDOWN && GameUI::event.key.keysym.sym == SDLK_s)
+            if (GameUI::event.type == SDL_KEYDOWN
+                && GameUI::event.key.keysym.sym == SDLK_s)
             {
                 solve3x3Area();
                 Draw::renderFrame();
             }
 
             // Reset board
-            if (GameUI::event.type == SDL_KEYDOWN && GameUI::event.key.keysym.sym == SDLK_SPACE)
+            if (GameUI::event.type == SDL_KEYDOWN
+                && GameUI::event.key.keysym.sym == SDLK_SPACE)
             {
                 isMouseDown = false;
                 resetBoard();
                 Draw::renderFrame();
             }
-
         }
 
         if (Timer::updateTimer())
         {
-            //std::cout << "Elapsed time: " << GameUI::elapsedSeconds << std::endl;
+            // std::cout << "Elapsed time: " << GameUI::elapsedSeconds <<
+            // std::endl;
             Draw::renderFrame();
         }
-        
+
         SDL_Delay(16); // 60 FPS
     }
 
@@ -249,7 +266,7 @@ void create_window()
     {
         SDL_DestroyTexture(GameUI::mineTexture);
     }
-    
+
     TTF_CloseFont(GameUI::cellFont);
     TTF_CloseFont(GameUI::UIFont);
 
@@ -265,9 +282,9 @@ void updateCellSize()
 {
     const int window_offset = 50;
 
-    int availableWidth = (WINDOW_WIDTH - GAME_INFO_OFFSET)  - window_offset * 2;
+    int availableWidth = (WINDOW_WIDTH - GAME_INFO_OFFSET) - window_offset * 2;
     int availableHeight = WINDOW_HEIGHT - window_offset * 2;
-    
+
     int cellSizeX = availableWidth / GameUI::board->width;
     int cellSizeY = availableHeight / GameUI::board->height;
 
@@ -300,10 +317,11 @@ bool hoverCell()
     {
         GameUI::board->grid[GameUI::hoveredCellIndex].isHovered = false;
     }
-    
+
     int previousHoveredCellIndex = GameUI::hoveredCellIndex;
 
-    if (x < 50 || x >= 50 + (GameUI::board->width * GameUI::cellSize) || y < 50 || y >= 50 + (GameUI::board->height * GameUI::cellSize))
+    if (x < 50 || x >= 50 + (GameUI::board->width * GameUI::cellSize) || y < 50
+        || y >= 50 + (GameUI::board->height * GameUI::cellSize))
     {
         GameUI::hoveredCellIndex = -1;
         return previousHoveredCellIndex != -1;
@@ -313,15 +331,14 @@ bool hoverCell()
     int mouseY = y - 50;
 
     int cellX = mouseX / GameUI::cellSize;
-    int cellY = mouseY / GameUI::cellSize;  
+    int cellY = mouseY / GameUI::cellSize;
 
-    
     if (!GameUI::board->isInBounds(cellX, cellY))
     {
         GameUI::hoveredCellIndex = -1;
         return previousHoveredCellIndex != -1;
     }
-    
+
     Cell &cell = GameUI::board->getCell(cellX, cellY);
     cell.isHovered = true;
     GameUI::hoveredCellIndex = cellY * GameUI::board->width + cellX;
@@ -334,11 +351,12 @@ void clickCell(bool isHovered)
     {
         return;
     }
-    
+
     int x = 0;
     int y = 0;
-    
-    if (GameUI::event.type == SDL_MOUSEBUTTONUP || GameUI::event.type == SDL_MOUSEBUTTONDOWN)
+
+    if (GameUI::event.type == SDL_MOUSEBUTTONUP
+        || GameUI::event.type == SDL_MOUSEBUTTONDOWN)
     {
         x = GameUI::event.button.x;
         y = GameUI::event.button.y;
@@ -348,8 +366,8 @@ void clickCell(bool isHovered)
         SDL_GetMouseState(&x, &y);
     }
 
-    if (x < 50 || x >= 50 + GameUI::cellSize * GameUI::board->width
-        || y < 50 || y >= 50 + GameUI::cellSize * GameUI::board->height)
+    if (x < 50 || x >= 50 + GameUI::cellSize * GameUI::board->width || y < 50
+        || y >= 50 + GameUI::cellSize * GameUI::board->height)
     {
         if (GameUI::pressedCellIndex != -1)
         {
@@ -357,10 +375,10 @@ void clickCell(bool isHovered)
         }
         return;
     }
-    
+
     int mouseX = x - 50;
     int mouseY = y - 50;
-    
+
     int cellX = mouseX / GameUI::cellSize;
     int cellY = mouseY / GameUI::cellSize;
 
@@ -377,7 +395,7 @@ void clickCell(bool isHovered)
         GameUI::hoveredCells.clear();
         return;
     }
-    
+
     Cell &cell = GameUI::board->getCell(cellX, cellY);
     if (cell.isFlagged)
     {
@@ -410,7 +428,7 @@ void clickCell(bool isHovered)
         GameUI::pressedCellIndex = cellIndex;
         cell.isPressed = true;
     }
-    
+
     if (!isHovered)
     {
         if (GameUI::pressedCellIndex != -1)
@@ -427,9 +445,8 @@ void clickCell(bool isHovered)
         cell.isPressed = false;
     }
 
-    
     // std::cout << "Clicked on cell " << cellX << "; " << cellY << std::endl;
-    
+
     if (GameUI::nbClicks == 0 && !isHovered)
     {
         GameUI::board->placeAllMines(cellX, cellY);
@@ -473,7 +490,7 @@ void revealCell(int cellX, int cellY, bool isHovered)
     {
         return;
     }
-    
+
     Cell &cell = GameUI::board->getCell(cellX, cellY);
     if (cell.isRevealed || cell.isMine && !isHovered || cell.isFlagged)
     {
@@ -499,7 +516,7 @@ void revealCell(int cellX, int cellY, bool isHovered)
     // Expand only from 0-mines cells
     for (int dx = cellX - 1; dx <= cellX + 1; dx++)
     {
-        for (int dy = cellY -1; dy <= cellY + 1; dy++)
+        for (int dy = cellY - 1; dy <= cellY + 1; dy++)
         {
             if (dx == cellX && dy == cellY)
             {
@@ -537,7 +554,8 @@ void flagCell()
         return;
     }
 
-    if (x < 50 || x >= 50 + GameUI::cellSize * GameUI::board->width || y < 50 || y >= 50 + GameUI::cellSize * GameUI::board->height)
+    if (x < 50 || x >= 50 + GameUI::cellSize * GameUI::board->width || y < 50
+        || y >= 50 + GameUI::cellSize * GameUI::board->height)
     {
         return;
     }
@@ -552,7 +570,7 @@ void flagCell()
     {
         return;
     }
-    
+
     // std::cout << "Flagged cell " << cellX << "; " << cellY << std::endl;
 
     if (GameUI::nbClicks == 0)
@@ -569,7 +587,8 @@ void flagCell()
     Cell &cell = GameUI::board->getCell(cellX, cellY);
     if (!cell.isRevealed)
     {
-        cell.isFlagged = !cell.isFlagged; // Flag the cell if it was not flagged or unflag it if there was a flag
+        cell.isFlagged = !cell.isFlagged; // Flag the cell if it was not flagged
+                                          // or unflag it if there was a flag
         if (cell.isFlagged)
         {
             GameUI::board->remainingMines--;
@@ -579,7 +598,7 @@ void flagCell()
             cell.isPressed = false;
             GameUI::board->remainingMines++;
         }
-        
+
         return;
     }
 }
@@ -603,9 +622,9 @@ void chordCell(int cellX, int cellY, bool isHovered)
         GameUI::nbClicks++;
         GameUI::chordClicks++;
     }
-    
+
     int totalFlaggedCellsCont = 0;
-    
+
     for (int dx = cellX - 1; dx <= cellX + 1; dx++)
     {
         for (int dy = cellY - 1; dy <= cellY + 1; dy++)
@@ -631,18 +650,18 @@ void chordCell(int cellX, int cellY, bool isHovered)
     {
         return;
     }
-    
 
     // Chord
-    for (int dx = cellX -1; dx <= cellX + 1; dx++)
+    for (int dx = cellX - 1; dx <= cellX + 1; dx++)
     {
         for (int dy = cellY - 1; dy <= cellY + 1; dy++)
         {
-            if(GameUI::board->isInBounds(dx, dy))
+            if (GameUI::board->isInBounds(dx, dy))
             {
                 Cell &cell = GameUI::board->getCell(dx, dy);
 
-                if (cell.isRevealed || cell.isFlagged || dx == cellX && dy == cellY)
+                if (cell.isRevealed || cell.isFlagged
+                    || dx == cellX && dy == cellY)
                 {
                     continue;
                 }
@@ -650,7 +669,8 @@ void chordCell(int cellX, int cellY, bool isHovered)
                 if (isHovered)
                 {
                     cell.isHovered = true;
-                    GameUI::hoveredCells.push_back(dy * GameUI::board->width + dx);
+                    GameUI::hoveredCells.push_back(dy * GameUI::board->width
+                                                   + dx);
                     continue;
                 }
                 else
@@ -688,7 +708,7 @@ void checkForGameFinish()
             }
         }
     }
-    
+
     finishGame(true);
 }
 
@@ -696,18 +716,21 @@ void checkForGameFinish()
 void finishGame(bool isWon)
 {
     Timer::endTimer();
-    
-    GameUI::board->solvingTime = Timer::finalTimeSeconds + (float) Timer::finalTimeMilliseconds / 1000;
+
+    GameUI::board->solvingTime =
+        Timer::finalTimeSeconds + (float)Timer::finalTimeMilliseconds / 1000;
     GameUI::board->solved3BV = GameUI::board->calculate3BV(isWon);
     GameUI::board->total3BV = GameUI::board->calculate3BV(true);
 
-    GameUI::board->solved3BVPerSecond = GameUI::board->solved3BV / GameUI::board->solvingTime;
+    GameUI::board->solved3BVPerSecond =
+        GameUI::board->solved3BV / GameUI::board->solvingTime;
     GameUI::board->totalClicks = GameUI::nbClicks;
     GameUI::board->leftClicks = GameUI::leftClicks;
     GameUI::board->rightClicks = GameUI::rightClicks;
     GameUI::board->chordClicks = GameUI::chordClicks;
-    GameUI::board->efficiency = (float) GameUI::board->solved3BV / GameUI::board->totalClicks * 100;
-    
+    GameUI::board->efficiency =
+        (float)GameUI::board->solved3BV / GameUI::board->totalClicks * 100;
+
     GameUI::isGameFinished = true;
     GameUI::isGameWon = isWon;
 
@@ -721,26 +744,32 @@ void finishGame(bool isWon)
         std::cout << COLOR_RED << "Failed board in ";
     }
 
-    std::cout << Timer::finalTimeSeconds << "." << Timer::finalTimeMilliseconds << " sec" << std::endl << COLOR_RESET;
+    std::cout << Timer::finalTimeSeconds << "." << Timer::finalTimeMilliseconds
+              << " sec" << std::endl
+              << COLOR_RESET;
 
     if (isWon)
     {
-        std::cout << "3BV: " << GameUI::board->solved3BV << std::endl; 
+        std::cout << "3BV: " << GameUI::board->solved3BV << std::endl;
     }
     else
     {
-        std::cout << "3BV: " << GameUI::board->solved3BV << " / " << GameUI::board->total3BV << std::endl;
+        std::cout << "3BV: " << GameUI::board->solved3BV << " / "
+                  << GameUI::board->total3BV << std::endl;
     }
 
     char solved3BVPerSecondBuffer[20];
-    snprintf(solved3BVPerSecondBuffer, sizeof(solved3BVPerSecondBuffer), "3BV/s: %.3f", GameUI::board->solved3BVPerSecond);
+    snprintf(solved3BVPerSecondBuffer, sizeof(solved3BVPerSecondBuffer),
+             "3BV/s: %.3f", GameUI::board->solved3BVPerSecond);
     std::string solved3BVPerSecondString = solved3BVPerSecondBuffer;
     std::cout << solved3BVPerSecondString << std::endl;
-    
-    std::cout << "Clicks: " << GameUI::nbClicks << " (Left clicks: " <<
-        GameUI::leftClicks << ", Right clicks: " << GameUI::rightClicks <<
-        ", Chord clicks: " << GameUI::chordClicks << ")" << std::endl;
-    std::cout << "Efficiency: " << GameUI::board->efficiency << "%" << std::endl;
+
+    std::cout << "Clicks: " << GameUI::nbClicks
+              << " (Left clicks: " << GameUI::leftClicks
+              << ", Right clicks: " << GameUI::rightClicks
+              << ", Chord clicks: " << GameUI::chordClicks << ")" << std::endl;
+    std::cout << "Efficiency: " << GameUI::board->efficiency << "%"
+              << std::endl;
     std::cout << "Frames rendered: " << GameUI::framesRendered << std::endl;
 }
 
@@ -749,7 +778,7 @@ void resetBoard()
     int width = GameUI::board->width;
     int height = GameUI::board->height;
     int minesCount = GameUI::board->minesCount;
-    
+
     delete GameUI::board;
     GameUI::board = new Board(width, height, minesCount);
 
@@ -757,7 +786,7 @@ void resetBoard()
     {
         std::cerr << "ResetBoard: Failed to reset board" << std::endl;
     }
-    
+
     GameUI::isGameFinished = false;
     GameUI::isGameWon = false;
     GameUI::nbClicks = 0;
@@ -768,7 +797,7 @@ void resetBoard()
     GameUI::hoveredCellIndex = -1;
     GameUI::hoveredCells.clear();
     GameUI::framesRendered = 0;
-    
+
     Timer::resetTimer();
     Draw::drawGameInfo();
 }
@@ -784,7 +813,8 @@ void solve3x3Area()
     int y = 0;
     SDL_GetMouseState(&x, &y);
 
-    if (x < 50 || x >= 50 + GameUI::cellSize * GameUI::board->width || y < 50 || y >= 50 + GameUI::cellSize * GameUI::board->height)
+    if (x < 50 || x >= 50 + GameUI::cellSize * GameUI::board->width || y < 50
+        || y >= 50 + GameUI::cellSize * GameUI::board->height)
     {
         return;
     }

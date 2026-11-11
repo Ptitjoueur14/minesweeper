@@ -1,5 +1,6 @@
-#include <iostream>
 #include "../include/board.hpp"
+
+#include <iostream>
 
 #define COLOR_RESET "\033[0m"
 #define COLOR_RED "\033[31m"
@@ -12,7 +13,8 @@
 // Intermediate: 16x16/40
 // Expert: 30x16/99
 
-Board::Board(int w, int h, int mines) : rng(std::random_device{}())
+Board::Board(int w, int h, int mines)
+    : rng(std::random_device{}())
 {
     width = w;
     height = h;
@@ -20,22 +22,24 @@ Board::Board(int w, int h, int mines) : rng(std::random_device{}())
     totalCells = width * height;
     if (minesCount > totalCells - 1)
     {
-        std::cerr << "Board: Can't initialise board with no empty cells" << std::endl;
+        std::cerr << "Board: Can't initialise board with no empty cells"
+                  << std::endl;
         exit(1);
     }
-    
+
     remainingMines = minesCount;
     grid.resize(totalCells);
 };
 
-Cell& Board::getCell(int w, int h)
+Cell &Board::getCell(int w, int h)
 {
     return grid[h * width + w];
 }
 
 void Board::printBoard()
 {
-    std::cout << "Board of size " << width << "x" << height << "/" << minesCount << std::endl;
+    std::cout << "Board of size " << width << "x" << height << "/" << minesCount
+              << std::endl;
     for (int y = 0; y < height; y++)
     {
         for (int x = 0; x < width; x++)
@@ -47,8 +51,11 @@ void Board::printBoard()
             }
             else
             {
-                std::vector<std::string> colors = {"30;100", "94", "32", "91", "95", "33", "96", "37", "90"};
-                std::cout << "\033[" << colors.at(cell.adjacentMines) << "m" << cell.adjacentMines << COLOR_RESET << " ";
+                std::vector<std::string> colors = { "30;100", "94", "32",
+                                                    "91",     "95", "33",
+                                                    "96",     "37", "90" };
+                std::cout << "\033[" << colors.at(cell.adjacentMines) << "m"
+                          << cell.adjacentMines << COLOR_RESET << " ";
             }
         }
         std::cout << COLOR_RESET << std::endl;
@@ -68,7 +75,8 @@ void Board::placeRandomMine(int firstClickX, int firstClickY)
     int attemptsCount = 0;
 
     int firstClickIndex = firstClickY * width + firstClickX;
-    while (newMineIndex == -1 || newMineIndex == firstClickIndex  || grid[newMineIndex].isMine)
+    while (newMineIndex == -1 || newMineIndex == firstClickIndex
+           || grid[newMineIndex].isMine)
     {
         newMineIndex = getRandomNumber(totalCells);
         attemptsCount++;
@@ -80,14 +88,16 @@ void Board::placeRandomMine(int firstClickX, int firstClickY)
 
 void Board::placeAllMines(int firstClickX, int firstClickY)
 {
-    std::cout << "------------------------------------------------------------------" << std::endl;
+    std::cout
+        << "------------------------------------------------------------------"
+        << std::endl;
     std::cout << "Placing " << minesCount << " random mines : ";
-    
+
     for (int i = 0; i < minesCount; i++)
     {
         placeRandomMine(firstClickX, firstClickY);
     }
-    
+
     std::cout << std::endl;
 }
 
@@ -112,7 +122,6 @@ void Board::updateCellAdjacency(int w, int h)
     getCell(w, h).adjacentMines = totalAdjacentMines;
 }
 
-
 void Board::updateAllCellAdjacencies()
 {
     for (int y = 0; y < height; y++)
@@ -124,7 +133,8 @@ void Board::updateAllCellAdjacencies()
     }
 }
 
-void Board::expandConnectedZeroRegion(std::vector<bool> &visited, int cellX, int cellY)
+void Board::expandConnectedZeroRegion(std::vector<bool> &visited, int cellX,
+                                      int cellY)
 {
     if (!isInBounds(cellX, cellY))
     {
@@ -136,7 +146,7 @@ void Board::expandConnectedZeroRegion(std::vector<bool> &visited, int cellX, int
     {
         return;
     }
-    
+
     Cell &cell = getCell(cellX, cellY);
     if (cell.isMine || cell.adjacentMines != 0)
     {
@@ -144,7 +154,7 @@ void Board::expandConnectedZeroRegion(std::vector<bool> &visited, int cellX, int
     }
 
     visited[cellIndex] = true; // Mark Zero cell as visited
-    
+
     for (int dx = cellX - 1; dx <= cellX + 1; dx++)
     {
         for (int dy = cellY - 1; dy <= cellY + 1; dy++)
@@ -153,7 +163,7 @@ void Board::expandConnectedZeroRegion(std::vector<bool> &visited, int cellX, int
             {
                 continue;
             }
-            
+
             expandConnectedZeroRegion(visited, dx, dy);
         }
     }
@@ -170,7 +180,8 @@ int Board::countZeroRegions(bool isSolved)
         {
             Cell &cell = getCell(x, y);
 
-            if (cell.isMine || cell.adjacentMines != 0 || (!isSolved && !cell.isRevealed))
+            if (cell.isMine || cell.adjacentMines != 0
+                || (!isSolved && !cell.isRevealed))
             {
                 continue;
             }
@@ -219,7 +230,8 @@ int Board::countIsolatedNumbers(bool isSolved)
         {
             Cell &cell = getCell(x, y);
 
-            if (cell.isMine || cell.adjacentMines == 0 || (!isSolved && !cell.isRevealed))
+            if (cell.isMine || cell.adjacentMines == 0
+                || (!isSolved && !cell.isRevealed))
             {
                 continue;
             }
@@ -243,4 +255,60 @@ int Board::calculate3BV(bool isSolved)
     int isolatedNumbers = countIsolatedNumbers(isSolved);
 
     return zeroRegions + isolatedNumbers;
+}
+
+CellVisualState Board::updateCellVisualState(Cell &cell, bool isGameFinished,
+                                             bool isGameWon)
+{
+    if (!isGameFinished)
+    {
+        if (!cell.isRevealed && !cell.isHovered && !cell.isFlagged)
+        {
+            return HIDDEN;
+        }
+        if (cell.isHovered && !cell.isPressed)
+        {
+            return HOVERED;
+        }
+        if (cell.isFlagged)
+        {
+            return FLAGGED;
+        }
+        if (cell.isPressed)
+        {
+            return PRESSED;
+        }
+        return REVEALED;
+    }
+
+    if (isGameWon)
+    {
+        if (cell.isFlagged)
+        {
+            return FLAGGED;
+        }
+        if (cell.isRevealed)
+        {
+            return REVEALED;
+        }
+        return HIDDEN;
+    }
+
+    if (cell.isMine && cell.isRevealed)
+    {
+        return EXPLODED;
+    }
+    if (cell.isFlagged && !cell.isMine)
+    {
+        return MISPLACED_FLAG;
+    }
+    if (cell.isFlagged)
+    {
+        return FLAGGED;
+    }
+    if (cell.isRevealed)
+    {
+        return REVEALED;
+    }
+    return HIDDEN;
 }

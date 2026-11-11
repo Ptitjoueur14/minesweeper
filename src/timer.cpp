@@ -1,5 +1,6 @@
-#include <chrono>
 #include "../include/timer.hpp"
+
+#include <chrono>
 
 bool Timer::isTimerActive = false;
 std::chrono::steady_clock::time_point Timer::gameStartTime;
@@ -39,7 +40,7 @@ bool Timer::updateTimer()
         elapsedSeconds = newElapsedSeconds;
         return true;
     }
-    
+
     return false;
 }
 
@@ -53,19 +54,28 @@ void Timer::endTimer()
     gameEndTime = getTimeNow();
     isTimerActive = false;
     finalTimeSeconds = getElapsedTimeSeconds(gameStartTime, gameEndTime);
-    finalTimeMilliseconds = getElapsedTimeMilliseconds(gameStartTime, gameEndTime);
+    finalTimeMilliseconds =
+        getElapsedTimeMilliseconds(gameStartTime, gameEndTime);
 }
 
 // Gets the "Seconds" component of the time
-int Timer::getElapsedTimeSeconds(std::chrono::steady_clock::time_point startTime, std::chrono::steady_clock::time_point endTime)
+int Timer::getElapsedTimeSeconds(
+    std::chrono::steady_clock::time_point startTime,
+    std::chrono::steady_clock::time_point endTime)
 {
-    return std::chrono::duration_cast<std::chrono::seconds>(endTime - startTime).count();
+    return std::chrono::duration_cast<std::chrono::seconds>(endTime - startTime)
+        .count();
 }
 
 // Gets the "Milliseconds" component of the time
-int Timer::getElapsedTimeMilliseconds(std::chrono::steady_clock::time_point startTime, std::chrono::steady_clock::time_point endTime)
+int Timer::getElapsedTimeMilliseconds(
+    std::chrono::steady_clock::time_point startTime,
+    std::chrono::steady_clock::time_point endTime)
 {
-    return std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count() % 1000;
+    return std::chrono::duration_cast<std::chrono::milliseconds>(endTime
+                                                                 - startTime)
+               .count()
+        % 1000;
 }
 
 void Timer::resetTimer()

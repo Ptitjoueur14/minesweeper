@@ -1,55 +1,52 @@
 #ifndef DRAW_HPP
 #define DRAW_HPP
 
-#include <iostream>
 #include <SDL2/SDL.h>
+#include <iostream>
 
 class Draw
 {
-    public:
+public:
+    SDL_Texture *numberTextures[8] = {};
+    SDL_Color number_colors[8] = {
+        { 0, 0, 255, 255 },     { 0, 255, 0, 255 },    { 255, 0, 0, 255 },
+        { 255, 0, 255, 255 },   { 245, 159, 22, 255 }, { 22, 230, 245, 255 },
+        { 200, 200, 200, 255 }, { 150, 150, 150, 255 }
+    };
 
-        SDL_Texture *numberTextures[8] = {};
-        SDL_Color number_colors[8] = {
-            {0, 0, 255, 255},
-            {0, 255, 0, 255},
-            {255, 0, 0, 255},
-            {255, 0, 255, 255},
-            {245, 159, 22, 255},
-            {22, 230, 245, 255},
-            {200, 200, 200, 255},
-            {150, 150, 150, 255}
-        };
+    static void initializeNumberTextures();
+    static void destroyNumberTextures();
 
-        static void initializeNumberTextures();
-        static void destroyNumberTextures();
-        
-        // Called at the start of the game to draw borders
-        static void drawStaticUI();
+    // Called at the start of the game to draw borders
+    static void drawStaticUI();
 
-        // Called when board state changes (on click)
-        static void redrawBoardUI();
+    // Called when board state changes (on click)
+    static void redrawBoardUI();
 
-        static void drawTextInCell(const std::string &text, SDL_Rect cellRect, SDL_Color color);
+    static void drawTextInCell(const std::string &text, SDL_Rect cellRect,
+                               SDL_Color color);
 
-        static void drawText(const std::string &text, SDL_Rect textRect, SDL_Color color);
+    static void drawText(const std::string &text, SDL_Rect textRect,
+                         SDL_Color color);
 
-        static void drawAllCells();
+    static void drawCell(int i, int j);
+    static void drawAllCells();
 
-        static void drawNumber(int cellX, int cellY);
+    static void drawNumber(int cellX, int cellY);
 
-        static void drawGameStatistics();
+    static void drawGameStatistics();
 
-        static void drawGameInfo();
+    static void drawGameInfo();
 
-        static void drawGameFinishInfo();
+    static void drawGameFinishInfo();
 
-        // Draws a colored square in the cell (cellX, cellY)
-        static void drawSquare(int cellX, int cellY, SDL_Color color);
+    // Draws a colored square in the cell (cellX, cellY)
+    static void drawSquare(int cellX, int cellY, SDL_Color color);
 
-        static void drawTextureInCell(int cellX, int cellY, SDL_Texture *texture);
+    static void drawTextureInCell(int cellX, int cellY, SDL_Texture *texture);
 
-        // Main function to draw everything in the UI
-        static void renderFrame();
+    // Main function to draw everything in the UI
+    static void renderFrame();
 };
 
 #endif
