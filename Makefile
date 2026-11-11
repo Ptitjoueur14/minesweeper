@@ -1,17 +1,20 @@
-LIBRARY_FLAGS = -I/usr/include/SDL2 -lSDL2 -lSDL2_ttf -lSDL2_image
+PKG_CONFIG_LIBS := sdl2 SDL2_ttf SDL2_image
+CXXFLAGS := `pkg-config --cflags $(PKG_CONFIG_LIBS)`
+LDLIBS := `pkg-config --libs $(PKG_CONFIG_LIBS)`
 
-SRCS = src/board.cpp src/game.cpp src/timer.cpp src/draw.cpp src/ui.cpp
-OBJS = $(SRCS:.cpp=.o)
+LDFLAGS += -Wl,-rpath,$(shell pkg-config --variable=libdir sdl3)
 
-TARGET = game
-DEBUG_FLAGS = -fsanitize=address -g
+CXXFLAGS += -g3 -fsanitize=address
+LDFLAGS += -fsanitize=address
 
-all: $(OBJS)
-	g++ $(OBJS) -o $(TARGET) $(LIBRARY_FLAGS)
+SRCS := src/board.cpp src/game.cpp src/timer.cpp src/draw.cpp src/ui.cpp
+OBJS := $(SRCS:.cpp=.o)
 
-debug: LDFLAGS += $(DEBUG_FLAGS)
-debug: $(OBJS)
-	g++ $(OBJS) $(LDFLAGS) -o $(TARGET) $(LIBRARY_FLAGS)
+TARGET := game
+
+$(TARGET): $(OBJS)
+	$(CXX) $(LDFLAGS) $(LDLIBS) -o $@ $^
 
 clean:
 	$(RM) $(OBJS) $(TARGET)
+	$(RM) $(TARGET) $(OBJS)
