@@ -1,6 +1,6 @@
 PKG_CONFIG_LIBS := sdl2 sdl2-compat SDL2_ttf SDL2_image sdl3
 CXXFLAGS := `pkg-config --cflags $(PKG_CONFIG_LIBS)`
-LDLIBS := `pkg-config --libs $(PKG_CONFIG_LIBS)`
+LDLIBS := -lm `pkg-config --libs $(PKG_CONFIG_LIBS)`
 
 # LDFLAGS += -Wl,-rpath,$(shell pkg-config --variable=libdir sdl3)
 

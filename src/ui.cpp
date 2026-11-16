@@ -1,4 +1,5 @@
 #include "../include/ui.hpp"
+#include "../include/options.hpp"
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_error.h>
@@ -54,6 +55,7 @@ const char flagCellKey = 'q';
 #define OPEN_SANS_FONT_PATH "assets/fonts/open-sans-font/open-sans.ttf"
 #define FLAG_TEXTURE_PATH "assets/textures/flag.png"
 #define MINE_TEXTURE_PATH "assets/textures/mine.png"
+#define OPTIONS_PATH "options.txt"
 
 void create_window()
 {
@@ -153,6 +155,8 @@ void create_window()
     bool isMouseDown = false;
     bool canFlag = true;
 
+    struct options *options = parse_options(OPTIONS_PATH);
+
     Draw::renderFrame();
 
     while (isRunning)
@@ -161,7 +165,7 @@ void create_window()
         {
             // Close window with "X" button
             if (GameUI::event.type == SDL_QUIT)
-            {
+            {SDL_KeyCode
                 isRunning = false;
                 break;
             }
@@ -178,7 +182,7 @@ void create_window()
                 && ((GameUI::event.type == SDL_MOUSEBUTTONDOWN
                      && GameUI::event.button.button == SDL_BUTTON_LEFT)
                     || (GameUI::event.type == SDL_KEYDOWN
-                        && GameUI::event.key.keysym.sym == SDLK_a)))
+                        && GameUI::event.key.keysym.sym == options->click_key)))
             {
                 isMouseDown = true;
                 clickCell(true);
@@ -189,7 +193,7 @@ void create_window()
             if ((GameUI::event.type == SDL_MOUSEBUTTONUP
                  && GameUI::event.button.button == SDL_BUTTON_LEFT)
                 || (GameUI::event.type == SDL_KEYUP
-                    && GameUI::event.key.keysym.sym == SDLK_a))
+                    && GameUI::event.key.keysym.sym == options->click_key))
             {
                 isMouseDown = false;
                 clickCell(false);
@@ -206,7 +210,7 @@ void create_window()
                 Draw::renderFrame();
             }
             if (GameUI::event.type == SDL_KEYDOWN
-                && GameUI::event.key.keysym.sym == SDLK_q)
+                && GameUI::event.key.keysym.sym == options->flag_key)
             {
                 isMouseDown = false;
                 flagCell();
@@ -216,7 +220,7 @@ void create_window()
             if ((GameUI::event.type == SDL_MOUSEBUTTONUP
                  && GameUI::event.button.button == SDL_BUTTON_RIGHT)
                 || (GameUI::event.type == SDL_KEYUP
-                    && GameUI::event.key.keysym.sym == SDLK_q))
+                    && GameUI::event.key.keysym.sym == options->flag_key))
             {
                 canFlag = true;
             }

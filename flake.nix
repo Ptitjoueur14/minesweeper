@@ -53,6 +53,7 @@
                 bear
 
                 pkg-config
+                glibc
                 sdl3
                 SDL2
                 SDL2_image
