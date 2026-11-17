@@ -165,7 +165,7 @@ void create_window()
         {
             // Close window with "X" button
             if (GameUI::event.type == SDL_QUIT)
-            {SDL_KeyCode
+            {
                 isRunning = false;
                 break;
             }

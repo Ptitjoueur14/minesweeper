@@ -1,2 +1,0 @@
-clickKey = a
-flagKey = q

@@ -33,7 +33,6 @@ char *parse_option(FILE *file)
     char *buffer;
     if (getline(&buffer, nullptr, file) == -1)
     {
-        fclose(file);
         return nullptr;
     }
 
@@ -49,7 +48,7 @@ char *parse_option(FILE *file)
 
 struct options *parse_options(const char *filename)
 {
-    struct options *options = malloc(sizeof(struct options));
+    struct options *options = (struct options *)malloc(sizeof(struct options));
     if (!options)
     {
         return nullptr;
@@ -76,6 +75,8 @@ struct options *parse_options(const char *filename)
     {
         options->flag_key = getSDLKeyCode(flag_line[0]);
     }
+
+    fclose(file);
 
     return options;
 }
