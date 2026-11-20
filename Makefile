@@ -1,4 +1,4 @@
-PKG_CONFIG_LIBS := sdl2 sdl2-compat SDL2_ttf SDL2_image
+PKG_CONFIG_LIBS := sdl2 SDL2_ttf SDL2_image
 CXXFLAGS := `pkg-config --cflags $(PKG_CONFIG_LIBS)`
 LDLIBS := -lm `pkg-config --libs $(PKG_CONFIG_LIBS)`
 

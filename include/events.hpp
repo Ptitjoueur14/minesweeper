@@ -2,7 +2,7 @@
 #define EVENTS_H
 
 #include <SDL2/SDL.h>
-#include "SDL_keycode.h"
+#include <SDL_keycode.h>
 
 SDL_KeyCode getSDLKeyCode(const char c);
 
