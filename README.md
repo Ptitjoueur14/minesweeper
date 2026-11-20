@@ -29,3 +29,11 @@ To exit the game, press Escape.
 
 ![Beginner](./assets/images/beginner_in_progress.png)
 ![Beginner](./assets/images/expert_finished.png)
+
+## Solver
+
+The project will also feature a solver which gives the probabilities of a cell being a mine for the board currently played.
+
+For example, here is a website for solving minesweeper boards: [minesweeper solver](https://minesweeperblast.com/solver/)
+
+There is a guide on how to calculate probabilities: [probability guide](https://minesweeperblast.com/minesweeper-probability/)
