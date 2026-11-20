@@ -5,16 +5,19 @@
 #include <SDL2/SDL_keycode.h>
 #include <stdio.h>
 
-struct options
+class Options
 {
-  SDL_Keycode click_key;
-  SDL_KeyCode flag_key;
+  public:
+    SDL_Keycode click_key;
+    SDL_KeyCode flag_key;
+
+    Options(const char *filename);
 };
 
 char *trim(char *line);
 
 char *parse_option(FILE *file);
 
-struct options *parse_options(const char *filename);
+Options parse_options(const char *filename);
 
 #endif /* ! OPTIONS_H */

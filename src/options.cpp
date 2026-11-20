@@ -1,82 +1,65 @@
 #define _POSIX_C_SOURCE 200809L
 
+#include <fstream>
+#include <iostream>
 #include "../include/options.hpp"
 #include "../include/events.hpp"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
-char *trim(char *line)
+std::string trim(std::string &line)
 {
-    if (!line)
-    {
-        return NULL;
-    }
-
-    while (*line != '\0' && isspace(*line))
-    {
-        line++;
-    }
-
-    size_t i = strlen(line) - 1;
+    size_t i = 0;
     while (line[i] != '\0' && isspace(line[i]))
     {
-        line[i] = '\0';
         i++;
     }
 
-    return line;
+    size_t j = line.length() - 1;
+    while (line[j] != '\0' && isspace(line[j]))
+    {
+        j--;
+    }
+
+    return line.substr(i, j);
 }
 
-char *parse_option(FILE *file)
+char parse_option(std::ifstream &file)
 {
-    char *buffer;
-    if (getline(&buffer, nullptr, file) == -1)
+    std::string line;
+    std::getline(file, line);
+
+    if (line.empty())
     {
-        return nullptr;
+        std::cout << "empty" << std::endl;
+        return 0;
     }
 
-    char *option;
-    char *line = strtok_r(buffer, "=", &option);
-    if (!line)
-    {
-        return NULL;
-    }
-
-    return trim(line);
+    return line.back();
 }
 
-struct options *parse_options(const char *filename)
+Options::Options(const char *filename)
 {
-    struct options *options = (struct options *)malloc(sizeof(struct options));
-    if (!options)
-    {
-        return nullptr;
-    }
-
     // Set keys by default
-    options->click_key = SDLK_a;
-    options->flag_key = SDLK_q;
-    
-    FILE *file = fopen(filename, "w");
-    if (!file)
+    click_key = SDLK_a;
+    flag_key = SDLK_q;
+
+    printf("Opening %s\n", filename);
+    if (!filename)
     {
-        return options;
+        return;
     }
+    
+    std::ifstream file;
+    file.open(filename);
 
     // If config file is valid, parse keys
-    char *click_line = parse_option(file);
-    if (click_line != NULL)
-    {
-        options->click_key = getSDLKeyCode(click_line[0]);
-    }
-    char *flag_line = parse_option(file);
-    if (flag_line != NULL)
-    {
-        options->flag_key = getSDLKeyCode(flag_line[0]);
-    }
+    char click_char = parse_option(file);
+    char flag_char = parse_option(file);
 
-    fclose(file);
+    click_key = getSDLKeyCode(click_char);
+    flag_key = getSDLKeyCode(flag_char);
 
-    return options;
+    file.close();
 }

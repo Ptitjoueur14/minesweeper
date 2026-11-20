@@ -1,0 +1,2 @@
+ClickKey = q
+FlagKey = a

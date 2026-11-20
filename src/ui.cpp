@@ -155,7 +155,7 @@ void create_window()
     bool isMouseDown = false;
     bool canFlag = true;
 
-    struct options *options = parse_options(OPTIONS_PATH);
+    Options options = Options(OPTIONS_PATH);
 
     Draw::renderFrame();
 
@@ -182,22 +182,24 @@ void create_window()
                 && ((GameUI::event.type == SDL_MOUSEBUTTONDOWN
                      && GameUI::event.button.button == SDL_BUTTON_LEFT)
                     || (GameUI::event.type == SDL_KEYDOWN
-                        && GameUI::event.key.keysym.sym == options->click_key)))
+                        && GameUI::event.key.keysym.sym == options.click_key)))
             {
                 isMouseDown = true;
                 clickCell(true);
                 Draw::renderFrame();
+                continue;
             }
 
             // Open cell with left click or "A" click
             if ((GameUI::event.type == SDL_MOUSEBUTTONUP
                  && GameUI::event.button.button == SDL_BUTTON_LEFT)
                 || (GameUI::event.type == SDL_KEYUP
-                    && GameUI::event.key.keysym.sym == options->click_key))
+                    && GameUI::event.key.keysym.sym == options.click_key))
             {
                 isMouseDown = false;
                 clickCell(false);
                 Draw::renderFrame();
+                continue;
             }
 
             // Flag cell with right click or "Q"
@@ -208,21 +210,24 @@ void create_window()
                 canFlag = false;
                 flagCell();
                 Draw::renderFrame();
+                continue;
             }
             if (GameUI::event.type == SDL_KEYDOWN
-                && GameUI::event.key.keysym.sym == options->flag_key)
+                && GameUI::event.key.keysym.sym == options.flag_key)
             {
                 isMouseDown = false;
                 flagCell();
                 Draw::renderFrame();
+                continue;
             }
 
             if ((GameUI::event.type == SDL_MOUSEBUTTONUP
                  && GameUI::event.button.button == SDL_BUTTON_RIGHT)
                 || (GameUI::event.type == SDL_KEYUP
-                    && GameUI::event.key.keysym.sym == options->flag_key))
+                    && GameUI::event.key.keysym.sym == options.flag_key))
             {
                 canFlag = true;
+                continue;
             }
 
             if (GameUI::event.type == SDL_MOUSEMOTION)
@@ -232,6 +237,7 @@ void create_window()
                 {
                     Draw::renderFrame();
                 }
+                continue;
             }
 
             // Solve 3x3 area with "S"
@@ -240,6 +246,7 @@ void create_window()
             {
                 solve3x3Area();
                 Draw::renderFrame();
+                continue;
             }
 
             // Reset board
