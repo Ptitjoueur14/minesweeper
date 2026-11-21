@@ -30,6 +30,7 @@ public:
                          SDL_Color color);
 
     static void drawCell(int i, int j);
+    static void drawCell(int index);
     static void drawAllCells();
 
     static void drawNumber(int cellX, int cellY);

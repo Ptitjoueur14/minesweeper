@@ -161,6 +161,7 @@ void create_window()
 
     while (isRunning)
     {
+        bool shouldRender = false;
         while (SDL_PollEvent(&GameUI::event))
         {
             // Close window with "X" button
@@ -186,7 +187,7 @@ void create_window()
             {
                 isMouseDown = true;
                 clickCell(true);
-                Draw::renderFrame();
+                shouldRender = true;
                 continue;
             }
 
@@ -198,7 +199,7 @@ void create_window()
             {
                 isMouseDown = false;
                 clickCell(false);
-                Draw::renderFrame();
+                shouldRender = true;
                 continue;
             }
 
@@ -209,7 +210,7 @@ void create_window()
                 isMouseDown = false;
                 canFlag = false;
                 flagCell();
-                Draw::renderFrame();
+                shouldRender = true;
                 continue;
             }
             if (GameUI::event.type == SDL_KEYDOWN
@@ -217,7 +218,7 @@ void create_window()
             {
                 isMouseDown = false;
                 flagCell();
-                Draw::renderFrame();
+                shouldRender = true;
                 continue;
             }
 
@@ -232,11 +233,7 @@ void create_window()
 
             if (GameUI::event.type == SDL_MOUSEMOTION)
             {
-                // Only redraw if hovered cell changed
-                if (hoverCell())
-                {
-                    Draw::renderFrame();
-                }
+                shouldRender |= hoverCell();
                 continue;
             }
 
@@ -245,7 +242,7 @@ void create_window()
                 && GameUI::event.key.keysym.sym == SDLK_s)
             {
                 solve3x3Area();
-                Draw::renderFrame();
+                shouldRender = true;
                 continue;
             }
 
@@ -255,14 +252,12 @@ void create_window()
             {
                 isMouseDown = false;
                 resetBoard();
-                Draw::renderFrame();
+                shouldRender = true;
             }
         }
 
-        if (Timer::updateTimer())
+        if (Timer::updateTimer() || shouldRender)
         {
-            // std::cout << "Elapsed time: " << GameUI::elapsedSeconds <<
-            // std::endl;
             Draw::renderFrame();
         }
 
@@ -289,7 +284,7 @@ void create_window()
     SDL_Quit();
 }
 
-void updateCellSize()
+void updateCellSize(void)
 {
     const int window_offset = 50;
 
@@ -309,14 +304,9 @@ void updateCellSize()
     }
 }
 
-bool hoverCell()
+bool hoverCell(void)
 {
-    if (GameUI::isGameFinished)
-    {
-        return false;
-    }
-
-    if (GameUI::event.type != SDL_MOUSEMOTION)
+    if (GameUI::isGameFinished || GameUI::event.type != SDL_MOUSEMOTION)
     {
         return false;
     }
@@ -324,18 +314,18 @@ bool hoverCell()
     int x = GameUI::event.motion.x;
     int y = GameUI::event.motion.y;
 
-    if (GameUI::hoveredCellIndex != -1)
-    {
-        GameUI::board->grid[GameUI::hoveredCellIndex].isHovered = false;
-    }
-
     int previousHoveredCellIndex = GameUI::hoveredCellIndex;
 
     if (x < 50 || x >= 50 + (GameUI::board->width * GameUI::cellSize) || y < 50
         || y >= 50 + (GameUI::board->height * GameUI::cellSize))
     {
         GameUI::hoveredCellIndex = -1;
-        return previousHoveredCellIndex != -1;
+        if (previousHoveredCellIndex != -1)
+        {
+            GameUI::board->grid[previousHoveredCellIndex].isHovered = false;
+            return true;
+        }
+        return false;
     }
 
     int mouseX = x - 50;
@@ -347,13 +337,29 @@ bool hoverCell()
     if (!GameUI::board->isInBounds(cellX, cellY))
     {
         GameUI::hoveredCellIndex = -1;
-        return previousHoveredCellIndex != -1;
+        if (previousHoveredCellIndex != -1)
+        {
+            GameUI::board->grid[previousHoveredCellIndex].isHovered = false;
+            return true;
+        }
+        return false;
     }
 
+    int newHoveredCellIndex = cellY * GameUI::board->width + cellX;
+
+    if (previousHoveredCellIndex == newHoveredCellIndex)
+    {
+        return false;
+    }
+
+    GameUI::hoveredCellIndex = newHoveredCellIndex;
     Cell &cell = GameUI::board->getCell(cellX, cellY);
     cell.isHovered = true;
-    GameUI::hoveredCellIndex = cellY * GameUI::board->width + cellX;
-    return previousHoveredCellIndex != GameUI::hoveredCellIndex;
+    if (previousHoveredCellIndex != -1)
+    {
+        GameUI::board->grid[previousHoveredCellIndex].isHovered = false;
+    }
+    return true;
 }
 
 void clickCell(bool isHovered)

@@ -55,7 +55,7 @@ void drawTextInCell(const std::string &text, SDL_Rect cellRect,
                     SDL_Color color);
 void drawTextureInCell(int cellX, int cellY, SDL_Texture *texture);
 
-bool hoverCell();
+bool hoverCell(void);
 void clickCell(bool isHovered);
 void revealCell(int cellX, int cellY, bool isHovered);
 

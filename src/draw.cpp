@@ -253,6 +253,13 @@ void Draw::drawCell(int cellX, int cellY)
     }
 }
 
+void Draw::drawCell(int index)
+{
+    int cellX = index % GameUI::board->width;
+    int cellY = index / GameUI::board->width;
+    drawCell(cellX, cellY);
+}
+
 void Draw::drawAllCells()
 {
     for (int i = 0; i < GameUI::board->width; i++)
@@ -400,10 +407,9 @@ void Draw::drawGameFinishInfo()
              GameUI::board->chordClicks);
     std::string chordClicksText = buffer;
 
-    snprintf(buffer, sizeof(buffer), "Efficiency: %i",
+    snprintf(buffer, sizeof(buffer), "Efficiency: %i%%",
              GameUI::board->efficiency);
     std::string efficiencyText = buffer;
-    efficiencyText += "%";
 
     SDL_Rect gameStatusRect;
     gameStatusRect.x = (WINDOW_WIDTH - GAME_INFO_OFFSET) + 30;
