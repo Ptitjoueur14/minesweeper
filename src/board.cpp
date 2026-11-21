@@ -28,7 +28,11 @@ Board::Board(int w, int h, int mines)
     }
 
     remainingMines = minesCount;
-    grid.resize(totalCells);
+    grid.reserve(totalCells);
+    for (int index = 0; index < totalCells; index++)
+    {
+        grid.emplace_back(index % width, index / width);
+    }
 };
 
 Cell &Board::getCell(int w, int h)
@@ -249,66 +253,29 @@ int Board::countIsolatedNumbers(bool isSolved)
 int Board::calculate3BV(bool isSolved)
 {
     // Count connected zero regions
-    int zeroRegions = countZeroRegions(isSolved);
-
     // Count isolated number cells not adjacent to zero regions
-    int isolatedNumbers = countIsolatedNumbers(isSolved);
-
-    return zeroRegions + isolatedNumbers;
+    return countZeroRegions(isSolved) + countIsolatedNumbers(isSolved);
 }
 
-CellVisualState Board::updateCellVisualState(Cell &cell, bool isGameFinished,
-                                             bool isGameWon)
+std::vector<struct Cell> Board::getAdjacentEmptyCells(int cellX, int cellY)
 {
-    if (!isGameFinished)
+    std::vector<struct Cell> emptyCells;
+    for (int y = cellY - 1; y <= cellY + 1; y++)
     {
-        if (!cell.isRevealed && !cell.isHovered && !cell.isFlagged)
+        for (int x = cellX - 1; x <= cellX + 1; x++)
         {
-            return HIDDEN;
+            if (!Board::isInBounds(x, y))
+            {
+                continue;
+            }
+
+            Cell& cell = getCell(x, y);
+            if (!cell.isRevealed)
+            {
+                emptyCells.push_back(cell);
+            }
         }
-        if (cell.isHovered && !cell.isPressed)
-        {
-            return HOVERED;
-        }
-        if (cell.isFlagged)
-        {
-            return FLAGGED;
-        }
-        if (cell.isPressed)
-        {
-            return PRESSED;
-        }
-        return REVEALED;
     }
 
-    if (isGameWon)
-    {
-        if (cell.isFlagged)
-        {
-            return FLAGGED;
-        }
-        if (cell.isRevealed)
-        {
-            return REVEALED;
-        }
-        return HIDDEN;
-    }
-
-    if (cell.isMine && cell.isRevealed)
-    {
-        return EXPLODED;
-    }
-    if (cell.isFlagged && !cell.isMine)
-    {
-        return MISPLACED_FLAG;
-    }
-    if (cell.isFlagged)
-    {
-        return FLAGGED;
-    }
-    if (cell.isRevealed)
-    {
-        return REVEALED;
-    }
-    return HIDDEN;
+    return emptyCells;
 }

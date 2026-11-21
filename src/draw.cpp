@@ -198,8 +198,7 @@ void Draw::drawCell(int cellX, int cellY)
     SDL_Color misplacedFlagColor = { 255, 0, 0, 255 };
 
     Cell &cell = GameUI::board->getCell(cellX, cellY);
-    cell.visualState = GameUI::board->updateCellVisualState(
-        cell, GameUI::isGameFinished, GameUI::isGameWon);
+    cell.updateCellVisualState(GameUI::isGameFinished, GameUI::isGameWon);
 
     switch (cell.visualState)
     {
@@ -364,6 +363,10 @@ void Draw::drawGameFinishInfo()
     int timeSeconds = Timer::finalTimeSeconds;
     int timeMilliseconds = Timer::finalTimeMilliseconds;
 
+    SDL_Rect gameFinishRect = { WINDOW_WIDTH - GAME_INFO_OFFSET + 20, GAME_INFO_OFFSET - 80, 250, 350 };
+    SDL_SetRenderDrawColor(GameUI::renderer, 5, 5, 50, 255);
+    SDL_RenderFillRect(GameUI::renderer, &gameFinishRect);
+    
     std::string gameStatusText;
 
     char buffer[100];
@@ -412,55 +415,55 @@ void Draw::drawGameFinishInfo()
     std::string efficiencyText = buffer;
 
     SDL_Rect gameStatusRect;
-    gameStatusRect.x = (WINDOW_WIDTH - GAME_INFO_OFFSET) + 30;
+    gameStatusRect.x = WINDOW_WIDTH - GAME_INFO_OFFSET + 30;
     gameStatusRect.y = GAME_INFO_OFFSET - 60;
     gameStatusRect.w = 150;
     gameStatusRect.h = 50;
 
     SDL_Rect timerRect;
-    timerRect.x = (WINDOW_WIDTH - GAME_INFO_OFFSET) + 30;
+    timerRect.x = WINDOW_WIDTH - GAME_INFO_OFFSET + 30;
     timerRect.y = GAME_INFO_OFFSET;
     timerRect.w = 150;
     timerRect.h = 50;
 
     SDL_Rect board3BVRect;
-    board3BVRect.x = (WINDOW_WIDTH - GAME_INFO_OFFSET) + 30;
+    board3BVRect.x = WINDOW_WIDTH - GAME_INFO_OFFSET + 30;
     board3BVRect.y = GAME_INFO_OFFSET + 30;
     board3BVRect.w = 150;
     board3BVRect.h = 50;
 
     SDL_Rect board3BVPerSecondRect;
-    board3BVPerSecondRect.x = (WINDOW_WIDTH - GAME_INFO_OFFSET) + 30;
+    board3BVPerSecondRect.x = WINDOW_WIDTH - GAME_INFO_OFFSET + 30;
     board3BVPerSecondRect.y = GAME_INFO_OFFSET + 60;
     board3BVPerSecondRect.w = 150;
     board3BVPerSecondRect.h = 50;
 
     SDL_Rect clicksRect;
-    clicksRect.x = (WINDOW_WIDTH - GAME_INFO_OFFSET) + 30;
+    clicksRect.x = WINDOW_WIDTH - GAME_INFO_OFFSET + 30;
     clicksRect.y = GAME_INFO_OFFSET + 90;
     clicksRect.w = 300;
     clicksRect.h = 50;
 
     SDL_Rect leftClicksRect;
-    leftClicksRect.x = (WINDOW_WIDTH - GAME_INFO_OFFSET) + 30;
+    leftClicksRect.x = WINDOW_WIDTH - GAME_INFO_OFFSET + 30;
     leftClicksRect.y = GAME_INFO_OFFSET + 120;
     leftClicksRect.w = 300;
     leftClicksRect.h = 50;
 
     SDL_Rect rightClicksRect;
-    rightClicksRect.x = (WINDOW_WIDTH - GAME_INFO_OFFSET) + 30;
+    rightClicksRect.x = WINDOW_WIDTH - GAME_INFO_OFFSET + 30;
     rightClicksRect.y = GAME_INFO_OFFSET + 150;
     rightClicksRect.w = 300;
     rightClicksRect.h = 50;
 
     SDL_Rect chordClicksRect;
-    chordClicksRect.x = (WINDOW_WIDTH - GAME_INFO_OFFSET) + 30;
+    chordClicksRect.x = WINDOW_WIDTH - GAME_INFO_OFFSET + 30;
     chordClicksRect.y = GAME_INFO_OFFSET + 180;
     chordClicksRect.w = 300;
     chordClicksRect.h = 50;
 
     SDL_Rect efficiencyRect;
-    efficiencyRect.x = (WINDOW_WIDTH - GAME_INFO_OFFSET) + 30;
+    efficiencyRect.x = WINDOW_WIDTH - GAME_INFO_OFFSET + 30;
     efficiencyRect.y = GAME_INFO_OFFSET + 210;
     efficiencyRect.w = 300;
     efficiencyRect.h = 50;

@@ -1,7 +1,4 @@
 #include <iostream>
-#include <string>
-
-#include "../include/board.hpp"
 #include "../include/ui.hpp"
 
 void printGameUsage()
