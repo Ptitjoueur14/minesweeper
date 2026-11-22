@@ -9,6 +9,7 @@
 #include <string>
 
 #include "board.hpp"
+#include "solver.hpp"
 
 class GameUI
 {
@@ -36,6 +37,7 @@ public:
     static std::vector<int> hoveredCells;
 
     static int framesRendered;
+    static Solver *solver;
 };
 
 void create_window();

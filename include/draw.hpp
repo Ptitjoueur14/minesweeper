@@ -2,7 +2,8 @@
 #define DRAW_HPP
 
 #include <SDL2/SDL.h>
-#include <iostream>
+#include <SDL2/SDL_ttf.h>
+#include <string>
 
 class Draw
 {
@@ -24,7 +25,7 @@ public:
     static void redrawBoardUI();
 
     static void drawTextInCell(const std::string &text, SDL_Rect cellRect,
-                               SDL_Color color);
+                               SDL_Color color, TTF_Font *font);
 
     static void drawText(const std::string &text, SDL_Rect textRect,
                          SDL_Color color);
@@ -34,6 +35,7 @@ public:
     static void drawAllCells();
 
     static void drawNumber(int cellX, int cellY);
+    static void drawMineProbability(int cellX, int cellY);
 
     static void drawGameStatistics();
 

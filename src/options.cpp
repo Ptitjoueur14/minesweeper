@@ -1,7 +1,6 @@
 #define _POSIX_C_SOURCE 200809L
 
 #include <fstream>
-#include <iostream>
 #include "../include/options.hpp"
 #include "../include/events.hpp"
 #include <stdlib.h>
@@ -32,7 +31,6 @@ char parse_option(std::ifstream &file)
 
     if (line.empty())
     {
-        std::cout << "empty" << std::endl;
         return 0;
     }
 
@@ -45,7 +43,6 @@ Options::Options(const char *filename)
     click_key = SDLK_a;
     flag_key = SDLK_q;
 
-    printf("Opening %s\n", filename);
     if (!filename)
     {
         return;

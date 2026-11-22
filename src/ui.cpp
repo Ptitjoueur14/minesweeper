@@ -38,8 +38,7 @@ int GameUI::pressedCellIndex = -1;
 std::vector<int> GameUI::hoveredCells;
 int GameUI::framesRendered = 0;
 
-const char clickCellKey = 'a';
-const char flagCellKey = 'q';
+Solver *GameUI::solver = nullptr;
 
 #define COLOR_RESET "\033[0m"
 #define COLOR_RED "\033[31m"
@@ -478,6 +477,7 @@ void clickCell(bool isHovered)
         GameUI::nbClicks++;
         GameUI::leftClicks++;
         cell.isRevealed = true;
+        cell.visualState = EXPLODED;
         finishGame(false);
         return;
     }
@@ -699,8 +699,9 @@ void chordCell(int cellX, int cellY, bool isHovered)
                 if (cell.isMine && !isHovered)
                 {
                     cell.isRevealed = true;
+                    cell.visualState = EXPLODED;
                     finishGame(false);
-                    continue;
+                    return;
                 }
 
                 // Reveal unflagged and unrevealed cell
@@ -788,6 +789,13 @@ void finishGame(bool isWon)
     std::cout << "Efficiency: " << GameUI::board->efficiency << "%"
               << std::endl;
     std::cout << "Frames rendered: " << GameUI::framesRendered << std::endl;
+
+    if (!isWon)
+    {
+        GameUI::solver = new Solver(*GameUI::board);
+        GameUI::solver->solveBoard();
+        GameUI::solver->displaySolverResults();
+    }
 }
 
 void resetBoard()
@@ -797,6 +805,10 @@ void resetBoard()
     int minesCount = GameUI::board->minesCount;
 
     delete GameUI::board;
+    if (GameUI::solver)
+    {
+        delete GameUI::solver;
+    }
     GameUI::board = new Board(width, height, minesCount);
 
     if (!GameUI::board)

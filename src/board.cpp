@@ -117,7 +117,12 @@ void Board::updateCellAdjacency(int w, int h)
     {
         for (int x = w - 1; x <= w + 1; x++)
         {
-            if (isInBounds(x, y) && getCell(x, y).isMine)
+            if (!isInBounds(x, y) || (x == w && y == h))
+            {
+                continue;
+            }
+
+            if (getCell(x, y).isMine)
             {
                 totalAdjacentMines++;
             }

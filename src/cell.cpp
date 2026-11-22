@@ -1,6 +1,10 @@
 #include "../include/cell.hpp"
 
-Cell::Cell(int cellX, int cellY) : x(cellX), y(cellY){};
+Cell::Cell(int cellX, int cellY) : x(cellX), y(cellY),
+    isSolvedFlag(false), isMine(false),
+    isFlagged(false), isHovered(false), isPressed(false), isRevealed(false),
+    adjacentMines(0),
+    flagConfigs(0), totalConfigs(0), mineProbability(0){};
 
 void Cell::updateCellVisualState(bool isGameFinished,
                                              bool isGameWon)

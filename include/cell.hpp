@@ -27,7 +27,10 @@ public:
         0; // The number of mines in a 3x3 area neighboring the cell
     enum CellVisualState visualState;
 
-    bool isSolvedMine;
+    bool isSolvedFlag;
+    int flagConfigs;
+    int totalConfigs;
+    float mineProbability; // The probability of the cell being a mine, between 0 and 1
 
     Cell(int cellX, int cellY);
     void updateCellVisualState(bool isGameFinished, bool isGameWon);

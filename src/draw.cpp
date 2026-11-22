@@ -2,6 +2,7 @@
 
 #include <SDL2/SDL_error.h>
 #include <SDL2/SDL_render.h>
+#include <SDL2/SDL_ttf.h>
 #include <iostream>
 #include <string>
 
@@ -113,10 +114,10 @@ void Draw::redrawBoardUI()
 }
 
 void Draw::drawTextInCell(const std::string &text, SDL_Rect cellRect,
-                          SDL_Color color)
+                          SDL_Color color, TTF_Font *font)
 {
     SDL_Surface *surface =
-        TTF_RenderText_Blended(GameUI::cellFont, text.c_str(), color);
+        TTF_RenderText_Blended(font, text.c_str(), color);
     if (!surface)
     {
         std::cerr << "Draw: DrawTextInCell: TTF_RenderText_Blended failed: "
@@ -274,27 +275,39 @@ void Draw::drawNumber(int cellX, int cellY)
 {
     Cell &cell = GameUI::board->getCell(cellX, cellY);
 
-    if (cell.adjacentMines > 0)
+    if (cell.adjacentMines == 0)
     {
-        std::vector<SDL_Color> textColors = {
-            { 0, 0, 255, 255 },     { 0, 255, 0, 255 },
-            { 255, 0, 0, 255 },     { 255, 0, 255, 255 },
-            { 245, 159, 22, 255 },  { 22, 230, 245, 255 },
-            { 200, 200, 200, 255 }, { 150, 150, 150, 255 }
-        };
-
-        SDL_Color textColor = textColors.at(cell.adjacentMines - 1);
-        std::string text = std::to_string(cell.adjacentMines);
-
-        int padding = 2;
-        SDL_Rect cellRect;
-        cellRect.w = GameUI::cellSize - padding;
-        cellRect.h = GameUI::cellSize - padding;
-        cellRect.x = 50 + GameUI::cellSize * cellX;
-        cellRect.y = 50 + GameUI::cellSize * cellY;
-
-        drawTextInCell(text, cellRect, textColor);
+        return;
     }
+    
+    std::vector<SDL_Color> textColors = {
+        { 0, 0, 255, 255 },     { 0, 255, 0, 255 },
+        { 255, 0, 0, 255 },     { 255, 0, 255, 255 },
+        { 245, 159, 22, 255 },  { 22, 230, 245, 255 },
+        { 200, 200, 200, 255 }, { 150, 150, 150, 255 }
+    };
+
+    SDL_Color textColor = textColors.at(cell.adjacentMines - 1);
+    std::string text = std::to_string(cell.adjacentMines);
+
+    int padding = 2;
+    SDL_Rect cellRect = { 50 + GameUI::cellSize * cellX, 50 + GameUI::cellSize * cellY, GameUI::cellSize - padding, GameUI::cellSize - padding };
+    
+    drawTextInCell(text, cellRect, textColor, GameUI::cellFont);
+}
+
+void Draw::drawMineProbability(int cellX, int cellY)
+{
+    Cell &cell = GameUI::board->getCell(cellX, cellY);
+
+    char buf[16];
+    std::string mineProbabilityText = std::to_string(static_cast<int>(cell.mineProbability * 100));
+    
+    int padding = 2;
+    SDL_Rect cellRect = { 50 + GameUI::cellSize * cellX, 50 + GameUI::cellSize * cellY, GameUI::cellSize - padding, GameUI::cellSize - padding };
+
+    SDL_Color textColor = { 0, 255, 0, 255 };
+    drawTextInCell(mineProbabilityText, cellRect, textColor, GameUI::UIFont);
 }
 
 void Draw::drawGameStatistics()
@@ -548,6 +561,12 @@ void Draw::renderFrame()
     Draw::drawGameInfo();
     Draw::drawGameStatistics();
     Draw::drawAllCells();
+
+    // Draw mine probabilities if game is finished and lost
+    if (GameUI::isGameFinished && !GameUI::isGameWon)
+    {
+        GameUI::solver->displaySolverResults();
+    }
 
     if (GameUI::isGameFinished)
     {
