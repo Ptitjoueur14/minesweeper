@@ -1,13 +1,12 @@
 #include "../../include/solver.hpp"
 #include "../../include/draw.hpp"
-#include <cstddef>
 #include <iostream>
 
 Solver::Solver(Board &board) : board(board){};
 
-std::vector<Cell> Solver::getUnknownCells()
+std::vector<Cell> Solver::getFrontierCells()
 {
-    std::vector<Cell> unknownCells;
+    std::vector<Cell> frontierCells;
 
     for (int y = 0; y < board.height; y++)
     {
@@ -46,12 +45,61 @@ std::vector<Cell> Solver::getUnknownCells()
 
             if (adjacentToRevealed)
             {
-                unknownCells.push_back(cell);
+                frontierCells.push_back(cell);
             }
         }
     }
 
-    return unknownCells;
+    return frontierCells;
+}
+
+std::vector<Cell> Solver::getHiddenCells()
+{
+    std::vector<Cell> hiddenCells;
+
+    for (int y = 0; y < board.height; y++)
+    {
+        for (int x = 0; x < board.width; x++)
+        {
+            Cell &cell = board.getCell(x, y);
+            if (cell.isRevealed && cell.visualState != EXPLODED)
+            {
+                continue;
+            }
+
+            bool adjacentToRevealed = false;
+            
+            for (int dy = y - 1; dy <= y + 1; dy++)
+            {
+                for (int dx = x - 1; dx <= x + 1; dx++)
+                {
+                    if (!board.isInBounds(dx, dy))
+                    {
+                        continue;
+                    }
+                    
+                    Cell &neighborCell = board.getCell(dx, dy);
+                    if (neighborCell.isRevealed && cell.visualState != EXPLODED)
+                    {
+                        adjacentToRevealed = true;
+                        break;
+                    }
+                }
+
+                if (adjacentToRevealed)
+                {
+                    break;
+                }
+            }
+
+            if (adjacentToRevealed)
+            {
+                hiddenCells.push_back(cell);
+            }
+        }
+    }
+
+    return hiddenCells;
 }
 
 bool Solver::isConfigAssignementValid(const std::vector<Cell>& unknownCells, const std::vector<bool>& config, int index)
@@ -211,13 +259,14 @@ void Solver::solveBoard()
         cell.mineProbability = 0.0f;
     }
 
-    std::vector<Cell> unknownCells = getUnknownCells();
-    std::cout << "Unknown cells: " << unknownCells.size() << std::endl;
+    std::vector<Cell> frontierCells = getFrontierCells();
+    std::vector<Cell> hiddenCells = getHiddenCells();
+    std::cout << "Unknown cells: " << frontierCells.size() << std::endl;
 
-    std::vector<bool> config(unknownCells.size(), false);
+    std::vector<bool> config(frontierCells.size(), false);
     
     int totalValidConfigs = 0;
-    generateConfigurations(unknownCells, config, 0, totalValidConfigs);
+    generateConfigurations(frontierCells, config, 0, totalValidConfigs);
 
     std::cout << "Valid configurations: " << totalValidConfigs << std::endl;
 
@@ -226,11 +275,17 @@ void Solver::solveBoard()
         return;
     }
 
-    for (const Cell& unknown : unknownCells)
+    for (const Cell& frontierCell : frontierCells)
     {
-        Cell& cell = board.getCell(unknown.x, unknown.y);
+        Cell& cell = board.getCell(frontierCell.x, frontierCell.y);
         cell.mineProbability = static_cast<float>(cell.flagConfigs) / static_cast<float>(cell.totalConfigs);
         std::cout << "Cell " << cell.x << ", " << cell.y << " : " << cell.flagConfigs << " flag configs / " << cell.totalConfigs << " total configs = " << cell.mineProbability << std::endl;
+    }
+
+    for (const Cell& hiddenCell : hiddenCells)
+    {
+        Cell &cell = board.getCell(hiddenCell.x, hiddenCell.y);
+        cell.mineProbability = static_cast<float>(board.minesCount) / static_cast<float>(board.totalCells);
     }
 }
 
