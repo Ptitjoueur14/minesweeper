@@ -6,6 +6,7 @@ class Solver
 {
     public:
         Board &board;
+        float minMineProbability = 0;
                 
         Solver(Board& board);
 

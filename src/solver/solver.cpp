@@ -305,6 +305,10 @@ void Solver::solveBoard()
     {
         Cell& cell = board.getCell(frontierCell.x, frontierCell.y);
         cell.mineProbability = static_cast<float>(cell.flagConfigs) / static_cast<float>(cell.totalConfigs);
+        if (cell.mineProbability < minMineProbability)
+        {
+            minMineProbability = cell.mineProbability;
+        }
         std::cout << "Cell " << cell.x << ", " << cell.y << " : " << cell.flagConfigs << " flag configs / " << cell.totalConfigs << " total configs = " << cell.mineProbability << std::endl;
     }
 
@@ -334,6 +338,11 @@ void Solver::solveBoard()
     }
 
     long double hiddenCellProbablity = mineBoardConfigs / totalBoardConfigs;
+    if (hiddenCellProbablity < minMineProbability)
+    {
+        minMineProbability = hiddenCellProbablity;
+    }
+    
     std::cout << "Hidden cells probability = " << mineBoardConfigs << " mine board configs / " << totalBoardConfigs
         << " total board configs = " << hiddenCellProbablity << std::endl;
     for (const Cell& hiddenCell : hiddenCells)
@@ -350,7 +359,7 @@ void Solver::displaySolverResults()
         Cell &cell = board.grid[index];
         if (!cell.isRevealed || cell.visualState == EXPLODED)
         {
-            Draw::drawMineProbability(index % board.width, index / board.width);
+            Draw::drawMineProbability(index % board.width, index / board.width, minMineProbability);
         }
     }
 }

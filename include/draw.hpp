@@ -35,7 +35,7 @@ public:
     static void drawAllCells();
 
     static void drawNumber(int cellX, int cellY);
-    static void drawMineProbability(int cellX, int cellY);
+    static void drawMineProbability(int cellX, int cellY, float minMineProbability);
 
     static void drawGameStatistics();
 

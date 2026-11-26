@@ -296,7 +296,7 @@ void Draw::drawNumber(int cellX, int cellY)
     drawTextInCell(text, cellRect, textColor, GameUI::cellFont);
 }
 
-void Draw::drawMineProbability(int cellX, int cellY)
+void Draw::drawMineProbability(int cellX, int cellY, float minMineProbabiity)
 {
     Cell &cell = GameUI::board->getCell(cellX, cellY);
 
@@ -306,6 +306,12 @@ void Draw::drawMineProbability(int cellX, int cellY)
     int padding = 2;
     SDL_Rect cellRect = { 50 + GameUI::cellSize * cellX, 50 + GameUI::cellSize * cellY, GameUI::cellSize - padding, GameUI::cellSize - padding };
 
+    if (cell.mineProbability <= minMineProbabiity)
+    {
+        SDL_Color minProbabilityColor = { 169, 230, 254, 255 };
+        drawSquare(cellX, cellY, minProbabilityColor);
+    }
+    
     SDL_Color textColor = { 0, 255, 0, 255 };
     drawTextInCell(mineProbabilityText, cellRect, textColor, GameUI::UIFont);
 }
@@ -566,6 +572,7 @@ void Draw::renderFrame()
     if (GameUI::isGameFinished && !GameUI::isGameWon)
     {
         GameUI::solver->displaySolverResults();
+        std::cout << "display " << GameUI::solver->minMineProbability << std::endl;
     }
 
     if (GameUI::isGameFinished)
