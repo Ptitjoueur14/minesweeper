@@ -1,8 +1,28 @@
 #include "../../include/solver.hpp"
 #include "../../include/draw.hpp"
+#include <cstddef>
 #include <iostream>
 
 Solver::Solver(Board &board) : board(board){};
+
+long double Solver::choose(int n, int k)
+{
+    if (n < 0 || k < 0 || k > n)
+    {
+        return 0;
+    }
+
+    k = k < n - k ? k : n - k;
+    long double result = 1;
+
+    for (int i = 1; i <= k; i++)
+    {
+        result *= (n - k + i);
+        result /= i;
+    }
+
+    return result;    
+}
 
 std::vector<Cell> Solver::getFrontierCells()
 {
@@ -79,7 +99,7 @@ std::vector<Cell> Solver::getHiddenCells()
                     }
                     
                     Cell &neighborCell = board.getCell(dx, dy);
-                    if (neighborCell.isRevealed && cell.visualState != EXPLODED)
+                    if (neighborCell.isRevealed && neighborCell.visualState != EXPLODED)
                     {
                         adjacentToRevealed = true;
                         break;
@@ -92,7 +112,7 @@ std::vector<Cell> Solver::getHiddenCells()
                 }
             }
 
-            if (adjacentToRevealed)
+            if (!adjacentToRevealed)
             {
                 hiddenCells.push_back(cell);
             }
@@ -213,7 +233,8 @@ bool Solver::isConfigurationValid(const std::vector<Cell>& unknownCells, const s
     return true;
 }
 
-void Solver::generateConfigurations(const std::vector<Cell>& unknownCells, std::vector<bool>& config, int index, int& totalValidConfigs)
+void Solver::generateConfigurations(const std::vector<Cell>& unknownCells, std::vector<bool>& config, int index,
+                                    int& totalValidConfigs, std::vector<long double>& configsMineCounts)
 {
     if (index == unknownCells.size())
     {
@@ -223,17 +244,21 @@ void Solver::generateConfigurations(const std::vector<Cell>& unknownCells, std::
         }
 
         totalValidConfigs++;
-
+        int mineCount = 0;
+        
         for (size_t i = 0; i < unknownCells.size(); i++)
         {
             Cell& cell = board.getCell(unknownCells.at(i).x, unknownCells.at(i).y);
             cell.totalConfigs++;
 
-            if (config.at(i))
+            if (config[i])
             {
                 cell.flagConfigs++;
+                mineCount++;
             }
         }
+
+        configsMineCounts[mineCount]++;
         
         return;
     }
@@ -244,7 +269,7 @@ void Solver::generateConfigurations(const std::vector<Cell>& unknownCells, std::
         config.at(index) = value == 1;
         if (isConfigAssignementValid(unknownCells, config, index))
         {
-            generateConfigurations(unknownCells, config, index + 1, totalValidConfigs);
+            generateConfigurations(unknownCells, config, index + 1, totalValidConfigs, configsMineCounts);
         }
     }
 }
@@ -264,9 +289,10 @@ void Solver::solveBoard()
     std::cout << "Unknown cells: " << frontierCells.size() << std::endl;
 
     std::vector<bool> config(frontierCells.size(), false);
+    std::vector<long double> configsMineCounts(frontierCells.size() + 1, 0);
     
     int totalValidConfigs = 0;
-    generateConfigurations(frontierCells, config, 0, totalValidConfigs);
+    generateConfigurations(frontierCells, config, 0, totalValidConfigs, configsMineCounts);
 
     std::cout << "Valid configurations: " << totalValidConfigs << std::endl;
 
@@ -282,10 +308,38 @@ void Solver::solveBoard()
         std::cout << "Cell " << cell.x << ", " << cell.y << " : " << cell.flagConfigs << " flag configs / " << cell.totalConfigs << " total configs = " << cell.mineProbability << std::endl;
     }
 
+    long double totalBoardConfigs = 0;
+    long double mineBoardConfigs = 0;
+    int frontierCellsSize = frontierCells.size();
+    int hiddenCellsSize = hiddenCells.size();
+
+    for (int k = 0; k <= frontierCellsSize; k++)
+    {
+        int remainingMines = board.minesCount - k;
+
+        if (remainingMines >= 0 && remainingMines <= hiddenCellsSize)
+        {
+            totalBoardConfigs += configsMineCounts[k] * choose(hiddenCellsSize, remainingMines);
+        }
+
+        if (remainingMines >= 1 && remainingMines <= hiddenCellsSize)
+        {
+            mineBoardConfigs += configsMineCounts[k] * choose(hiddenCellsSize - 1, remainingMines - 1);
+        }
+    }
+
+    if (totalBoardConfigs <= 0)
+    {
+        return;
+    }
+
+    long double hiddenCellProbablity = mineBoardConfigs / totalBoardConfigs;
+    std::cout << "Hidden cells probability = " << mineBoardConfigs << " mine board configs / " << totalBoardConfigs
+        << " total board configs = " << hiddenCellProbablity << std::endl;
     for (const Cell& hiddenCell : hiddenCells)
     {
         Cell &cell = board.getCell(hiddenCell.x, hiddenCell.y);
-        cell.mineProbability = static_cast<float>(board.minesCount) / static_cast<float>(board.totalCells);
+        cell.mineProbability = hiddenCellProbablity;
     }
 }
 
